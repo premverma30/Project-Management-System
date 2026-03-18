@@ -1,6 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import type { Request, Response } from "express";
-import dotenv from "dotenv";
+
 import bodyParser from "body-parser";
 import cors from "cors";
 import helmet from "helmet";
@@ -8,7 +11,7 @@ import morgan from "morgan";
 
 
 /* CONFIGURATIONS */
-dotenv.config();
+
 const app = express();
 app.use(express.json());
 app.use(helmet());
@@ -18,14 +21,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
+import projectRoutes from "./routes/projectRoutes.js";
+
 /* ROUTES */
 app.get("/", (req, res) => {
   res.send("This is home route");
 });
 
+app.use("/projects", projectRoutes);
+
 
 /* SERVER */
 const port = Number(process.env.PORT) || 3000;
 app.listen(port, "0.0.0.0", () => {
-  console.log(`Server running on part ${port}`);
+  console.log(`Server running on port ${port}`);
 });
