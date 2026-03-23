@@ -23,6 +23,7 @@ app.use(cors());
 
 import projectRoutes from "./routes/projectRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
+import searchRoutes from "./routes/searchRoutes.js";
 
 /* ROUTES */
 app.get("/", (req, res) => {
@@ -31,6 +32,7 @@ app.get("/", (req, res) => {
 
 app.use("/projects", projectRoutes);
 app.use("/tasks", taskRoutes);
+app.use("/search", searchRoutes);
 
 
 
