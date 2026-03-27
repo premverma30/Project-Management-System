@@ -25,6 +25,7 @@ import projectRoutes from "./routes/projectRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import teamRoutes from "./routes/teamRoutes.js";
 
 /* ROUTES */
 app.get("/", (req, res) => {
@@ -35,6 +36,7 @@ app.use("/projects", projectRoutes);
 app.use("/tasks", taskRoutes);
 app.use("/search", searchRoutes);
 app.use("/users", userRoutes);
+app.use("/teams", teamRoutes);
 
 
 
