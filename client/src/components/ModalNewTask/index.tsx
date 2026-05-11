@@ -40,9 +40,9 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
       tags,
       startDate: formattedStartDate,
       dueDate: formattedDueDate,
-      authorUserId: parseInt(authorUserId),
-      assignedUserId: parseInt(assignedUserId),
-      projectId: id !== null ? Number(id) : Number(projectId),
+      authorUserId: authorUserId,
+      assignedUserId: assignedUserId,
+      projectId: id !== null ? id : projectId,
     });
   };
 

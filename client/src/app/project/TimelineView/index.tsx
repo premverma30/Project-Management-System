@@ -17,7 +17,7 @@ const Timeline = ({ id, setIsModalNewTaskOpen }: Props) => {
     data: tasks,
     error,
     isLoading,
-  } = useGetTasksQuery({ projectId: Number(id) });
+  } = useGetTasksQuery({ projectId: id });
 
   const [displayOptions, setDisplayOptions] = useState<DisplayOption>({
     viewMode: ViewMode.Month,
@@ -30,7 +30,7 @@ const Timeline = ({ id, setIsModalNewTaskOpen }: Props) => {
         start: new Date(task.startDate as string),
         end: new Date(task.dueDate as string),
         name: task.title,
-        id: `Task-${task.id}`,
+        id: `Task-${task._id || task.id}`,
         type: "task" as TaskTypeItems,
         progress: task.points ? (task.points / 10) * 100 : 0,
         isDisabled: false,

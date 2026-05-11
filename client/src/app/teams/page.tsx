@@ -20,7 +20,7 @@ const CustomToolbar = () => (
 );
 
 const columns: GridColDef[] = [
-  { field: "id", headerName: "Team ID", width: 100 },
+  { field: "_id", headerName: "Team ID", width: 100 },
   { field: "teamName", headerName: "Team Name", width: 200 },
   { field: "productOwnerUsername", headerName: "Product Owner", width: 200 },
   {
@@ -44,6 +44,7 @@ const Teams = () => {
         <DataGrid
           rows={teams || []}
           columns={columns}
+          getRowId={(row) => row._id || row.teamId}
           pagination
           slots={{
             toolbar: CustomToolbar,

@@ -71,7 +71,7 @@ const TableView = ({ id, setIsModalNewTaskOpen }: Props) => {
     data: tasks,
     error,
     isLoading,
-  } = useGetTasksQuery({ projectId: Number(id) });
+  } = useGetTasksQuery({ projectId: id });
 
   if (isLoading) return <div>Loading...</div>;
   if (error || !tasks) return <div>An error occurred while fetching tasks</div>;
@@ -95,6 +95,7 @@ const TableView = ({ id, setIsModalNewTaskOpen }: Props) => {
       <DataGrid
         rows={tasks || []}
         columns={columns}
+        getRowId={(row) => row._id || row.id}
         className={dataGridClassNames}
         sx={dataGridSxStyles(isDarkMode)}
       />

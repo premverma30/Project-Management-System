@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import StoreProvider, { useAppSelector } from "./redux";
 import { useSession, signIn } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const isSidebarCollapsed = useAppSelector(
@@ -12,6 +13,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   );
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode);
   const { data: session, status } = useSession();
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     if (isDarkMode) {
@@ -23,8 +26,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   if (status === "loading") return <div className="flex h-screen items-center justify-center">Loading...</div>;
 
-  if (!session) {
-    signIn(); // This will redirect to the login page configured in nextauth
+  if (!session && pathname !== "/login") {
+    router.push("/login");
     return null;
   }
 
