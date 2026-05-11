@@ -1,11 +1,9 @@
 import type { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import Team from "../models/Team.js";
 
 export const getTeams = async (req: Request, res: Response): Promise<void> => {
   try {
-    const teams = await prisma.team.findMany();
+    const teams = await Team.find();
     res.json(teams);
   } catch (error: any) {
     res

@@ -8,6 +8,11 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import connectDB from "./config/db.js";
+
+// Connect to Database
+connectDB();
+
 
 
 /* CONFIGURATIONS */
@@ -26,6 +31,8 @@ import taskRoutes from "./routes/taskRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+
 
 /* ROUTES */
 app.get("/", (req, res) => {
@@ -37,6 +44,8 @@ app.use("/tasks", taskRoutes);
 app.use("/search", searchRoutes);
 app.use("/users", userRoutes);
 app.use("/teams", teamRoutes);
+app.use("/auth", authRoutes);
+
 
 
 

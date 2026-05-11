@@ -5,14 +5,14 @@ import { Menu, Moon, Search, Settings, Sun, User } from "lucide-react";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/app/redux";
 import { setIsDarkMode } from "@/state";
+import { useSession, signOut } from "next-auth/react";
 
 const Navbar = () => {
   const dispatch = useAppDispatch();
+  const { data: session } = useSession();
 
-  // CORRECTION: get dark mode state from redux
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode);
 
-  // CORRECTION: apply dark class to html
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
@@ -43,7 +43,6 @@ const Navbar = () => {
       {/* Right Section */}
       <div className="flex items-center">
         
-        {/* CORRECTION: dark mode toggle */}
         <button
           onClick={() => dispatch(setIsDarkMode(!isDarkMode))}
           className="rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -66,12 +65,21 @@ const Navbar = () => {
 
         <div className="hidden items-center justify-between md:flex">
           <div className="flex h-9 w-9 items-center justify-center">
-            <User className="h-6 w-6 rounded-full dark:text-white" />
+            {session?.user?.image ? (
+                <img src={session.user.image} alt={session.user.name || "User"} className="h-6 w-6 rounded-full" />
+            ) : (
+                <User className="h-6 w-6 rounded-full dark:text-white" />
+            )}
           </div>
 
-          <span className="mx-3 text-gray-800 dark:text-white">Username</span>
+          <span className="mx-3 text-gray-800 dark:text-white">
+            {session?.user?.name || "User"}
+          </span>
 
-          <button className="rounded bg-blue-400 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500">
+          <button 
+            onClick={() => signOut()}
+            className="rounded bg-blue-400 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500"
+          >
             Sign out
           </button>
         </div>

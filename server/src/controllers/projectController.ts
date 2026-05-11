@@ -1,12 +1,12 @@
 import type { Request, Response } from "express";
-import { prisma } from "../client.js";
+import Project from "../models/Project.js";
 
 export const getProjects = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const projects = await prisma.project.findMany();
+    const projects = await Project.find();
     res.json(projects);
   } catch (error: any) {
     res
@@ -21,13 +21,11 @@ export const createProject = async (
 ): Promise<void> => {
   const { name, description, startDate, endDate } = req.body;
   try {
-    const newProject = await prisma.project.create({
-      data: {
-        name,
-        description,
-        startDate,
-        endDate,
-      },
+    const newProject = await Project.create({
+      name,
+      description,
+      startDate,
+      endDate,
     });
     res.status(201).json(newProject);
   } catch (error: any) {
@@ -36,5 +34,3 @@ export const createProject = async (
       .json({ message: `Error creating a project: ${error.message}` });
   }
 };
-
-

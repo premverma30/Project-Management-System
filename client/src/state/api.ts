@@ -1,8 +1,9 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
+import { getSession } from "next-auth/react";
 
 export interface Project {
-  id: number;
+  _id?: string;
+  id?: string;
   name: string;
   description?: string;
   startDate?: string;
@@ -25,24 +26,27 @@ export enum Status {
 }
 
 export interface User {
-  userId?: number;
+  _id?: string;
+  userId?: string;
   username: string;
   email: string;
   profilePictureUrl?: string;
-  cognitoId?: string;
-  teamId?: number;
+  googleId?: string;
+  teamId?: string;
 }
 
 export interface Attachment {
-  id: number;
+  _id?: string;
+  id?: string;
   fileURL: string;
   fileName: string;
-  taskId: number;
-  uploadedById: number;
+  taskId: string;
+  uploadedById: string;
 }
 
 export interface Task {
-  id: number;
+  _id?: string;
+  id?: string;
   title: string;
   description?: string;
   status?: Status;
@@ -51,9 +55,9 @@ export interface Task {
   startDate?: string;
   dueDate?: string;
   points?: number;
-  projectId: number;
-  authorUserId?: number;
-  assignedUserId?: number;
+  projectId: string;
+  authorUserId?: string;
+  assignedUserId?: string;
 
   author?: User;
   assignee?: User;
@@ -68,20 +72,21 @@ export interface SearchResults {
 }
 
 export interface Team {
-  teamId: number;
+  _id?: string;
+  teamId?: string;
   teamName: string;
-  productOwnerUserId?: number;
-  projectManagerUserId?: number;
+  productOwnerUserId?: string;
+  projectManagerUserId?: string;
 }
 
 export const api = createApi({
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+    baseUrl: process.env.NEXT_PUBLIC_API_URL,
     prepareHeaders: async (headers) => {
-      const session = await fetchAuthSession();
-      const { accessToken } = session.tokens ?? {};
-      if (accessToken) {
-        headers.set("Authorization", `Bearer ${accessToken}`);
+      const session = await getSession();
+      const token = (session as any)?.backendToken;
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
       }
       return headers;
     },
@@ -92,16 +97,14 @@ export const api = createApi({
     getAuthUser: build.query({
       queryFn: async (_, _queryApi, _extraoptions, fetchWithBQ) => {
         try {
-          const user = await getCurrentUser();
-          const session = await fetchAuthSession();
+          const session = await getSession();
           if (!session) throw new Error("No session found");
-          const { userSub } = session;
-          const { accessToken } = session.tokens ?? {};
+          const mongoId = (session as any).mongoId;
 
-          const userDetailsResponse = await fetchWithBQ(`users/${userSub}`);
+          const userDetailsResponse = await fetchWithBQ(`users/${mongoId}`);
           const userDetails = userDetailsResponse.data as User;
 
-          return { data: { user, userSub, userDetails } };
+          return { data: userDetails };
         } catch (error: any) {
           return { error: error.message || "Could not fetch user data" };
         }
@@ -119,18 +122,18 @@ export const api = createApi({
       }),
       invalidatesTags: ["Projects"],
     }),
-    getTasks: build.query<Task[], { projectId: number }>({
+    getTasks: build.query<Task[], { projectId: string }>({
       query: ({ projectId }) => `tasks?projectId=${projectId}`,
       providesTags: (result) =>
         result
-          ? result.map(({ id }) => ({ type: "Tasks" as const, id }))
+          ? result.map((task) => ({ type: "Tasks" as const, id: task._id || task.id }))
           : [{ type: "Tasks" as const }],
     }),
-    getTasksByUser: build.query<Task[], number>({
+    getTasksByUser: build.query<Task[], string>({
       query: (userId) => `tasks/user/${userId}`,
       providesTags: (result, error, userId) =>
         result
-          ? result.map(({ id }) => ({ type: "Tasks", id }))
+          ? result.map((task) => ({ type: "Tasks" as const, id: task._id || task.id }))
           : [{ type: "Tasks", id: userId }],
     }),
     createTask: build.mutation<Task, Partial<Task>>({
@@ -141,7 +144,7 @@ export const api = createApi({
       }),
       invalidatesTags: ["Tasks"],
     }),
-    updateTaskStatus: build.mutation<Task, { taskId: number; status: string }>({
+    updateTaskStatus: build.mutation<Task, { taskId: string; status: string }>({
       query: ({ taskId, status }) => ({
         url: `tasks/${taskId}/status`,
         method: "PATCH",

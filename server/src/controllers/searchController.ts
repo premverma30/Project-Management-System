@@ -1,34 +1,32 @@
 import type { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import Task from "../models/Task.js";
+import Project from "../models/Project.js";
+import User from "../models/User.js";
 
 export const search = async (req: Request, res: Response): Promise<void> => {
   const { query } = req.query;
   try {
-    const tasks = await prisma.task.findMany({
-      where: {
-        OR: [
-          { title: { contains: query as string } },
-          { description: { contains: query as string } },
-        ],
-      },
+    const tasks = await Task.find({
+      $or: [
+        { title: { $regex: query as string, $options: "i" } },
+        { description: { $regex: query as string, $options: "i" } },
+      ],
     });
 
-    const projects = await prisma.project.findMany({
-      where: {
-        OR: [
-          { name: { contains: query as string } },
-          { description: { contains: query as string } },
-        ],
-      },
+    const projects = await Project.find({
+      $or: [
+        { name: { $regex: query as string, $options: "i" } },
+        { description: { $regex: query as string, $options: "i" } },
+      ],
     });
 
-    const users = await prisma.user.findMany({
-      where: {
-        OR: [{ username: { contains: query as string } }],
-      },
-    });
+    const users = await User.find({
+      $or: [
+        { username: { $regex: query as string, $options: "i" } },
+        { email: { $regex: query as string, $options: "i" } },
+      ],
+    }).select("-googleId");
+
     res.json({ tasks, projects, users });
   } catch (error: any) {
     res
