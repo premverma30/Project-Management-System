@@ -103,7 +103,7 @@ const Sidebar = () => {
               key={project._id || project.id}
               icon={Briefcase}
               label={project.name}
-              href={`/projects/${project._id || project.id}`}
+              href={`/project/${project._id || project.id}`}
             />
           ))}
 

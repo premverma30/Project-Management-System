@@ -2,9 +2,15 @@ import type { Request, Response } from "express";
 import Task from "../models/Task.js";
 import Attachment from "../models/Attachment.js";
 
+import mongoose from "mongoose";
+
 export const getTasks = async (req: Request, res: Response): Promise<void> => {
   const { projectId } = req.query;
   try {
+    if (projectId && !mongoose.Types.ObjectId.isValid(projectId as string)) {
+      res.json([]);
+      return;
+    }
     const tasks = await Task.find({ projectId })
       .populate('authorUserId', 'username profilePictureUrl email')
       .populate('assignedUserId', 'username profilePictureUrl email')
