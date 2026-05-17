@@ -163,7 +163,7 @@ export const api = createApi({
       providesTags: ["Teams"],
     }),
     search: build.query<SearchResults, string>({
-      query: (query) => `search?query=${query}`,
+      query: (query) => `search?query=${encodeURIComponent(query)}`,
     }),
   }),
 });

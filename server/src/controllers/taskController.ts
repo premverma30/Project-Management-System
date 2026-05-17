@@ -1,46 +1,52 @@
 import type { Request, Response } from "express";
 import Task from "../models/Task.js";
 import Attachment from "../models/Attachment.js";
-
 import mongoose from "mongoose";
+import { asyncHandler, ApiError } from "../middleware/errorHandler.js";
 
-export const getTasks = async (req: Request, res: Response): Promise<void> => {
+export const getTasks = asyncHandler(async (req: Request, res: Response) => {
   const { projectId } = req.query;
-  try {
-    if (projectId && !mongoose.Types.ObjectId.isValid(projectId as string)) {
+
+  const filter: any = {};
+  if (projectId) {
+    if (!mongoose.Types.ObjectId.isValid(projectId as string)) {
       res.json([]);
       return;
     }
-    const tasks = await Task.find({ projectId })
-      .populate('authorUserId', 'username profilePictureUrl email')
-      .populate('assignedUserId', 'username profilePictureUrl email')
-      .populate({
-        path: 'comments.userId',
-        select: 'username profilePictureUrl email'
-      });
-    
-    // To include attachments, we might need a separate query or virtuals if they were set up.
-    // For now, let's just fetch them if needed or assume they are fetched separately in the frontend.
-    // However, the prompt specifically asked for .populate('attachments').
-    // Since Attachment is a separate collection, we'll populate it.
-    
-    const tasksWithAttachments = await Promise.all(tasks.map(async (task) => {
-        const attachments = await Attachment.find({ taskId: task._id });
-        return { ...task.toObject(), attachments };
-    }));
-
-    res.json(tasksWithAttachments);
-  } catch (error: any) {
-    res
-      .status(500)
-      .json({ message: `Error retrieving tasks: ${error.message}` });
+    filter.projectId = projectId;
   }
-};
 
-export const createTask = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+  const tasks = await Task.find(filter)
+    .populate("authorUserId", "username profilePictureUrl email")
+    .populate("assignedUserId", "username profilePictureUrl email")
+    .populate({
+      path: "comments.userId",
+      select: "username profilePictureUrl email",
+    });
+
+  // Batch-fetch all attachments in a single query instead of N+1
+  const taskIds = tasks.map((t) => t._id);
+  const allAttachments = await Attachment.find({ taskId: { $in: taskIds } });
+
+  const attachmentsByTask = allAttachments.reduce(
+    (acc: Record<string, typeof allAttachments>, att) => {
+      const key = att.taskId.toString();
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(att);
+      return acc;
+    },
+    {}
+  );
+
+  const tasksWithAttachments = tasks.map((task) => ({
+    ...task.toObject(),
+    attachments: attachmentsByTask[task._id.toString()] || [],
+  }));
+
+  res.json(tasksWithAttachments);
+});
+
+export const createTask = asyncHandler(async (req: Request, res: Response) => {
   const {
     title,
     description,
@@ -56,76 +62,70 @@ export const createTask = async (
   } = req.body;
 
   if (!title || !projectId || !authorUserId) {
-    res.status(400).json({ 
-      message: "Missing required fields: title, projectId, and authorUserId are required" 
-    });
-    return;
+    throw new ApiError(
+      400,
+      "Missing required fields: title, projectId, and authorUserId are required"
+    );
   }
 
-  try {
-    const newTask = await Task.create({
-      title,
-      description,
-      status,
-      priority,
-      tags,
-      startDate: startDate ? new Date(startDate) : undefined,
-      dueDate: dueDate ? new Date(dueDate) : undefined,
-      points,
-      projectId,
-      authorUserId,
-      assignedUserId,
-    });
-    
-    const populatedTask = await Task.findById(newTask._id)
-      .populate('authorUserId', 'username profilePictureUrl email')
-      .populate('assignedUserId', 'username profilePictureUrl email');
+  const newTask = await Task.create({
+    title,
+    description,
+    status,
+    priority,
+    tags,
+    startDate: startDate ? new Date(startDate) : undefined,
+    dueDate: dueDate ? new Date(dueDate) : undefined,
+    points,
+    projectId,
+    authorUserId,
+    assignedUserId,
+  });
 
-    res.status(201).json(populatedTask);
-  } catch (error: any) {
-    res
-      .status(500)
-      .json({ message: `Error creating a task: ${error.message}` });
-  }
-};
+  const populatedTask = await Task.findById(newTask._id)
+    .populate("authorUserId", "username profilePictureUrl email")
+    .populate("assignedUserId", "username profilePictureUrl email");
 
-export const updateTaskStatus = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { taskId } = req.params;
-  const { status } = req.body;
-  try {
+  res.status(201).json(populatedTask);
+});
+
+export const updateTaskStatus = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { taskId } = req.params;
+    const { status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(taskId)) {
+      throw new ApiError(400, "Invalid task ID");
+    }
+
     const updatedTask = await Task.findByIdAndUpdate(
       taskId,
       { status },
       { new: true }
     );
-    res.json(updatedTask);
-  } catch (error: any) {
-    res.status(500).json({ message: `Error updating task: ${error.message}` });
-  }
-};
 
-export const getUserTasks = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { userId } = req.params;
-  try {
-    const tasks = await Task.find({
-      $or: [
-        { authorUserId: userId },
-        { assignedUserId: userId },
-      ],
-    })
-    .populate('authorUserId', 'username profilePictureUrl email')
-    .populate('assignedUserId', 'username profilePictureUrl email');
-    
-    res.json(tasks);
-  } catch (error: any) {
-    res
-      .status(500)
-      .json({ message: `Error retrieving user's tasks: ${error.message}` });
+    if (!updatedTask) {
+      throw new ApiError(404, "Task not found");
+    }
+
+    res.json(updatedTask);
   }
-};
+);
+
+export const getUserTasks = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw new ApiError(400, "Invalid user ID");
+    }
+
+    const tasks = await Task.find({
+      $or: [{ authorUserId: userId }, { assignedUserId: userId }],
+    })
+      .populate("authorUserId", "username profilePictureUrl email")
+      .populate("assignedUserId", "username profilePictureUrl email");
+
+    res.json(tasks);
+  }
+);

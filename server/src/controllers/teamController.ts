@@ -1,13 +1,8 @@
 import type { Request, Response } from "express";
 import Team from "../models/Team.js";
+import { asyncHandler } from "../middleware/errorHandler.js";
 
-export const getTeams = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const teams = await Team.find();
-    res.json(teams);
-  } catch (error: any) {
-    res
-      .status(500)
-      .json({ message: `Error retrieving teams: ${error.message}` });
-  }
-};
+export const getTeams = asyncHandler(async (_req: Request, res: Response) => {
+  const teams = await Team.find();
+  res.json(teams);
+});

@@ -1,4 +1,6 @@
-import Modal from "@/components/Modal";
+import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 import { useCreateProjectMutation } from "@/state/api";
 import React, { useState } from "react";
 import { formatISO } from "date-fns";
@@ -31,60 +33,69 @@ const ModalNewProject = ({ isOpen, onClose }: Props) => {
       startDate: formattedStartDate,
       endDate: formattedEndDate,
     });
+    
+    // Close modal and reset form
+    onClose();
+    setProjectName("");
+    setDescription("");
+    setStartDate("");
+    setEndDate("");
   };
 
   const isFormValid = () => {
     return projectName && description && startDate && endDate;
   };
 
-  const inputStyles =
-    "w-full rounded border border-gray-300 p-2 shadow-sm dark:border-dark-tertiary dark:bg-dark-tertiary dark:text-white dark:focus:outline-none";
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} name="Create New Project">
+    <Modal isOpen={isOpen} onClose={onClose} title="Create New Project">
       <form
-        className="mt-4 space-y-6"
+        className="mt-4 space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit();
         }}
       >
-        <input
+        <Input
           type="text"
-          className={inputStyles}
           placeholder="Project Name"
           value={projectName}
           onChange={(e) => setProjectName(e.target.value)}
         />
         <textarea
-          className={inputStyles}
+          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
           placeholder="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-2">
-          <input
-            type="date"
-            className={inputStyles}
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-          <input
-            type="date"
-            className={inputStyles}
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground pl-1">Start Date</span>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground pl-1">End Date</span>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
         </div>
-        <button
-          type="submit"
-          className={`focus-offset-2 mt-4 flex w-full justify-center rounded-md border border-transparent bg-blue-primary px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 ${
-            !isFormValid() || isLoading ? "cursor-not-allowed opacity-50" : ""
-          }`}
-          disabled={!isFormValid() || isLoading}
-        >
-          {isLoading ? "Creating..." : "Create Project"}
-        </button>
+        <div className="pt-2">
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full"
+            disabled={!isFormValid() || isLoading}
+            isLoading={isLoading}
+          >
+            Create Project
+          </Button>
+        </div>
       </form>
     </Modal>
   );

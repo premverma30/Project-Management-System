@@ -2,30 +2,43 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
-import type { Request, Response } from "express";
-
-import bodyParser from "body-parser";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import connectDB from "./config/db.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 // Connect to Database
 connectDB();
 
-
-
 /* CONFIGURATIONS */
-
 const app = express();
 app.use(express.json());
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cors());
 
+// Configure CORS with allowed origins
+const allowedOrigins = [
+  process.env.CLIENT_URL || "http://localhost:3001",
+  "http://localhost:3001",
+  "http://localhost:3000",
+];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
+/* ROUTES */
 import projectRoutes from "./routes/projectRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
@@ -33,10 +46,8 @@ import userRoutes from "./routes/userRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 
-
-/* ROUTES */
-app.get("/", (req, res) => {
-  res.send("This is home route");
+app.get("/", (_req, res) => {
+  res.json({ message: "NexTask AI API is running" });
 });
 
 app.use("/projects", projectRoutes);
@@ -46,8 +57,13 @@ app.use("/users", userRoutes);
 app.use("/teams", teamRoutes);
 app.use("/auth", authRoutes);
 
+// 404 handler for undefined routes
+app.use((_req, res) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
 
-
+// Centralized error handler — must be LAST
+app.use(errorHandler);
 
 /* SERVER */
 const port = Number(process.env.PORT) || 3000;

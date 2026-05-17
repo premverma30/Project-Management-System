@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import StoreProvider, { useAppSelector } from "./redux";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
@@ -24,18 +24,22 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     }
   }, [isDarkMode]);
 
-  if (status === "loading") return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (status === "loading") return <div className="flex h-screen items-center justify-center bg-background text-foreground">Loading...</div>;
 
-  if (!session && pathname !== "/login") {
+  if (!session && pathname !== "/login" && pathname !== "/") {
     router.push("/login");
     return null;
   }
 
+  if (pathname === "/") {
+    return <main className="min-h-screen w-full bg-background text-foreground">{children}</main>;
+  }
+
   return (
-    <div className="flex min-h-screen w-full bg-gray-50 text-gray-900">
+    <div className="flex min-h-screen w-full bg-background text-foreground">
       <Sidebar />
       <main
-        className={`flex w-full flex-col bg-gray-50 dark:bg-dark-bg ${
+        className={`flex w-full flex-col transition-all duration-300 ${
           isSidebarCollapsed ? "" : "md:pl-64"
         }`}
       >

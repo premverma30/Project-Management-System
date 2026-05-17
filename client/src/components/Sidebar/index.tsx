@@ -24,7 +24,7 @@ import React, { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/redux";
 import { setIsSidebarCollapsed } from "@/state";
 import { useGetProjectsQuery } from "@/state/api";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 const Sidebar = () => {
   const [showProjects, setShowProjects] = useState(true);
@@ -37,17 +37,17 @@ const Sidebar = () => {
   );
   const { data: session } = useSession();
 
-  const sidebarClassNames = `fixed flex flex-col h-[100%] justify-between shadow-xl
-    transition-all duration-300 h-full z-40 dark:bg-black bg-white
+  const sidebarClassNames = `fixed flex flex-col h-[100%] justify-between shadow-2xl
+    transition-all duration-300 z-40 bg-background/80 backdrop-blur-xl border-r border-border
     ${isSidebarCollapsed ? "w-0 hidden" : "w-64"}
   `;
 
   return (
     <div className={sidebarClassNames}>
-      <div className="flex h-[100%] w-full flex-col justify-start">
+      <div className="flex h-[100%] w-full flex-col justify-start overflow-y-auto overflow-x-hidden">
         {/* TOP LOGO */}
-        <div className="z-50 flex min-h-[56px] w-64 items-center justify-between bg-white px-6 pt-3 dark:bg-black">
-          <div className="text-xl font-bold tracking-wide text-gray-800 dark:text-white">
+        <div className="z-50 flex min-h-[72px] w-64 items-center justify-between px-6 pt-3">
+          <div className="text-xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
             NEXTASK AI
           </div>
           {isSidebarCollapsed ? null : (
@@ -57,20 +57,22 @@ const Sidebar = () => {
                 dispatch(setIsSidebarCollapsed(!isSidebarCollapsed));
               }}
             >
-              <X className="h-6 w-6 text-gray-800 hover:text-gray-500 dark:text-white" />
+              <X className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
             </button>
           )}
         </div>
         {/* TEAM */}
-        <div className="flex items-center gap-5 border-y-[1.5px] border-gray-200 px-8 py-4 dark:border-gray-700">
-          <Image src="/logo.png" alt="Logo" width={40} height={40} priority />
+        <div className="flex items-center gap-4 border-y border-border px-6 py-5">
+          <div className="relative h-10 w-10 flex-shrink-0">
+            <Image src="/logo.png" alt="Logo" fill className="object-cover rounded-lg" priority />
+          </div>
           <div>
-            <h3 className="text-md font-bold tracking-wide dark:text-gray-200">
-              NEXTASK TEAM
+            <h3 className="text-sm font-bold tracking-tight text-foreground">
+              NexTask Team
             </h3>
-            <div className="mt-1 flex items-center gap-2">
-              <LockIcon className="h-3 w-3 text-gray-500 dark:text-gray-400" />
-              <p className="text-xs text-gray-500">Private</p>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <LockIcon className="h-3 w-3 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground font-medium">Private Workspace</p>
             </div>
           </div>
         </div>
@@ -141,27 +143,28 @@ const Sidebar = () => {
           </>
         )}
       </div>
-      <div className="z-10 mt-32 flex w-full flex-col items-center gap-4 bg-white px-8 py-4 dark:bg-black md:hidden">
+      <div className="z-10 mt-auto flex w-full flex-col items-center gap-4 border-t border-border px-6 py-6 md:hidden">
         <div className="flex w-full items-center">
-          <div className="align-center flex h-9 w-9 justify-center">
+          <div className="relative h-10 w-10 flex-shrink-0">
             {session?.user?.image ? (
               <Image
                 src={session.user.image}
                 alt={session.user.name || "User"}
-                width={100}
-                height={100}
-                className="h-full rounded-full object-cover"
+                fill
+                className="rounded-full object-cover border border-border"
               />
             ) : (
-              <User className="h-6 w-6 self-center rounded-full dark:text-white" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                <User className="h-5 w-5 text-muted-foreground" />
+              </div>
             )}
           </div>
-          <span className="mx-3 font-medium text-gray-800 dark:text-white">
+          <span className="mx-3 font-medium text-foreground truncate">
             {session?.user?.name || "User"}
           </span>
           <button
-            className="self-start rounded bg-blue-400 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500"
-            onClick={() => {}}
+            className="ml-auto rounded-md bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            onClick={() => signOut()}
           >
             Sign out
           </button>
@@ -179,24 +182,27 @@ interface SidebarLinkProps {
 
 const SidebarLink = ({ href, icon: Icon, label }: SidebarLinkProps) => {
   const pathname = usePathname();
-  const isActive =
-    pathname === href || (pathname === "/" && href === "/dashboard");
+  const isActive = pathname === href;
 
   return (
     <Link href={href} className="w-full">
       <div
-        className={`relative flex cursor-pointer items-center gap-3 transition-colors hover:bg-gray-100 dark:bg-black dark:hover:bg-gray-700 ${
-          isActive ? "bg-gray-100 text-white dark:bg-gray-600" : ""
-        } justify-start px-8 py-3`}
+        className={`group relative flex cursor-pointer items-center gap-3 transition-all duration-200 justify-start px-6 py-3 mx-2 my-1 rounded-md ${
+          isActive
+            ? "bg-primary/10 text-primary"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        }`}
       >
         {isActive && (
-          <div className="absolute left-0 top-0 h-[100%] w-[5px] bg-blue-200" />
+          <div className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
         )}
 
-        <Icon className="h-6 w-6 text-gray-800 dark:text-gray-100" />
-        <span className={`font-medium text-gray-800 dark:text-gray-100`}>
-          {label}
-        </span>
+        <Icon
+          className={`h-5 w-5 transition-colors ${
+            isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+          }`}
+        />
+        <span className="font-medium text-sm tracking-tight">{label}</span>
       </div>
     </Link>
   );

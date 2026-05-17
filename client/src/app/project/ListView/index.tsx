@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import ProjectHeader from "@/app/projects/ProjectHeader";
-import Board from "../BoardView";
-import List from "../ListView";
-import Timeline from "../TimelineView";
-import Table from "../TableView";
-import ModalNewTask from "@/components/ModalNewTask";
+import React from "react";
+import Header from "@/components/Header";
+import TaskCard from "@/components/TaskCard";
+import { Task, useGetTasksQuery } from "@/state/api";
+import { Button } from "@/components/ui/Button";
+import { Plus } from "lucide-react";
 
 type Props = {
   id: string;
@@ -18,26 +17,28 @@ const ListView = ({ id, setIsModalNewTaskOpen }: Props) => {
     isLoading,
   } = useGetTasksQuery({ projectId: id });
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>An error occurred while fetching tasks</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading list...</div>;
+  if (error) return <div className="p-8 text-center text-destructive">An error occurred while fetching tasks</div>;
 
   return (
-    <div className="px-4 pb-8 xl:px-6">
-      <div className="pt-5">
+    <div className="px-6 pb-8">
+      <div className="pt-5 pb-4">
         <Header
           name="List"
           buttonComponent={
-            <button
-              className="flex items-center rounded bg-blue-primary px-3 py-2 text-white hover:bg-blue-600"
+            <Button
+              variant="primary"
               onClick={() => setIsModalNewTaskOpen(true)}
+              className="gap-2"
             >
+              <Plus className="h-4 w-4" />
               Add Task
-            </button>
+            </Button>
           }
           isSmallText
         />
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {tasks?.map((task: Task) => <TaskCard key={task._id || task.id} task={task} />)}
       </div>
     </div>

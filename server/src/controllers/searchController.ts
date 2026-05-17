@@ -2,35 +2,46 @@ import type { Request, Response } from "express";
 import Task from "../models/Task.js";
 import Project from "../models/Project.js";
 import User from "../models/User.js";
+import { asyncHandler, ApiError } from "../middleware/errorHandler.js";
 
-export const search = async (req: Request, res: Response): Promise<void> => {
+/**
+ * Escapes special regex characters to prevent ReDoS attacks.
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export const search = asyncHandler(async (req: Request, res: Response) => {
   const { query } = req.query;
-  try {
-    const tasks = await Task.find({
-      $or: [
-        { title: { $regex: query as string, $options: "i" } },
-        { description: { $regex: query as string, $options: "i" } },
-      ],
-    });
 
-    const projects = await Project.find({
-      $or: [
-        { name: { $regex: query as string, $options: "i" } },
-        { description: { $regex: query as string, $options: "i" } },
-      ],
-    });
-
-    const users = await User.find({
-      $or: [
-        { username: { $regex: query as string, $options: "i" } },
-        { email: { $regex: query as string, $options: "i" } },
-      ],
-    }).select("-googleId");
-
-    res.json({ tasks, projects, users });
-  } catch (error: any) {
-    res
-      .status(500)
-      .json({ message: `Error performing search: ${error.message}` });
+  if (!query || typeof query !== "string" || query.trim().length === 0) {
+    throw new ApiError(400, "Search query is required");
   }
-};
+
+  const sanitized = escapeRegex(query.trim());
+
+  const [tasks, projects, users] = await Promise.all([
+    Task.find({
+      $or: [
+        { title: { $regex: sanitized, $options: "i" } },
+        { description: { $regex: sanitized, $options: "i" } },
+      ],
+    })
+      .populate("authorUserId", "username profilePictureUrl email")
+      .populate("assignedUserId", "username profilePictureUrl email"),
+    Project.find({
+      $or: [
+        { name: { $regex: sanitized, $options: "i" } },
+        { description: { $regex: sanitized, $options: "i" } },
+      ],
+    }),
+    User.find({
+      $or: [
+        { username: { $regex: sanitized, $options: "i" } },
+        { email: { $regex: sanitized, $options: "i" } },
+      ],
+    }).select("-googleId"),
+  ]);
+
+  res.json({ tasks, projects, users });
+});
