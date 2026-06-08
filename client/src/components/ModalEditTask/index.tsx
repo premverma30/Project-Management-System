@@ -3,27 +3,20 @@
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Priority, Status, useCreateTaskMutation, useGetProjectsQuery, useGetUsersQuery } from "@/state/api";
-import React, { useState } from "react";
+import { Priority, Status, Task, useUpdateTaskMutation, useGetUsersQuery } from "@/state/api";
+import React, { useState, useEffect } from "react";
 import { formatISO } from "date-fns";
 import { useSession } from "next-auth/react";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  id?: string | null;
+  task: Task | null;
 };
 
-const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
-  const [createTask, { isLoading }] = useCreateTaskMutation();
-  const { data: session } = useSession();
+const ModalEditTask = ({ isOpen, onClose, task }: Props) => {
+  const [updateTask, { isLoading }] = useUpdateTaskMutation();
   const { data: users } = useGetUsersQuery();
-  const { data: projects } = useGetProjectsQuery();
-
-  // CRIT-02 FIX: authorUserId is no longer a text field that users type into.
-  // It is derived directly from the authenticated session's MongoDB _id.
-  // This prevents impersonation and guarantees the correct author is always set.
-  const authorUserId = (session as any)?.mongoId as string | undefined;
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -33,10 +26,35 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
   const [startDate, setStartDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [assignedUserId, setAssignedUserId] = useState("");
-  const [projectId, setProjectId] = useState("");
+
+  useEffect(() => {
+    if (task && isOpen) {
+      setTitle(task.title || "");
+      setDescription(task.description || "");
+      setStatus(task.status as Status || Status.ToDo);
+      setPriority(task.priority as Priority || Priority.Backlog);
+      setTags(
+        task.tags
+          ? Array.isArray(task.tags)
+            ? task.tags.join(", ")
+            : String(task.tags)
+          : ""
+      );
+      setStartDate(task.startDate ? task.startDate.split("T")[0] : "");
+      setDueDate(task.dueDate ? task.dueDate.split("T")[0] : "");
+      
+      let initialAssigneeId = "";
+      if (task.assignedUserId) {
+        initialAssigneeId = typeof task.assignedUserId === "string" ? task.assignedUserId : (task.assignedUserId as any)._id;
+      } else if (task.assignee) {
+        initialAssigneeId = (task.assignee as any)._id || (task.assignee as any).id || "";
+      }
+      setAssignedUserId(initialAssigneeId);
+    }
+  }, [task, isOpen]);
 
   const handleSubmit = async () => {
-    if (!title || !(id !== null || projectId)) return;
+    if (!title || !task) return;
 
     const formattedStartDate = startDate
       ? formatISO(new Date(startDate), { representation: "complete" })
@@ -45,45 +63,37 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
       ? formatISO(new Date(dueDate), { representation: "complete" })
       : undefined;
 
-    await createTask({
-      title,
-      description,
-      status,
-      priority,
-      tags,
-      startDate: formattedStartDate,
-      dueDate: formattedDueDate,
-      // CRIT-02: comes from session, never from user input (though backend overrides it anyway)
-      authorUserId: authorUserId || "placeholder",
-      assignedUserId: assignedUserId || undefined,
-      projectId: id !== null ? id : projectId,
+    const taskId = task.id || (task as any)._id;
+    if (!taskId) return;
+
+    await updateTask({
+      taskId,
+      taskData: {
+        title,
+        description,
+        status,
+        priority,
+        tags,
+        startDate: formattedStartDate,
+        dueDate: formattedDueDate,
+        assignedUserId: assignedUserId || undefined,
+      }
     });
 
-    // Reset form and close
     onClose();
-    setTitle("");
-    setDescription("");
-    setTags("");
-    setStartDate("");
-    setDueDate("");
-    setAssignedUserId("");
-    setProjectId("");
-    setStatus(Status.ToDo);
-    setPriority(Priority.Backlog);
   };
 
-  // CRIT-03 FIX: Previous logic was inverted — !(id !== null || projectId)
-  // returned false when project context existed, disabling the button always.
-  // Corrected: the form is valid when title, author, and project are all present.
   const isFormValid = (): boolean => {
-    return !!(title && (id !== null ? true : !!projectId));
+    return !!title;
   };
 
   const selectStyles =
     "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors";
 
+  if (!task) return null;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create New Task">
+    <Modal isOpen={isOpen} onClose={onClose} title="Edit Task">
       <form
         className="mt-4 space-y-4"
         onSubmit={(e) => {
@@ -160,7 +170,7 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
           </div>
         </div>
 
-        {/* Assignee dropdown — populated from real users, not a raw ID field */}
+        {/* Assignee dropdown */}
         <div className="space-y-1">
           <span className="text-xs text-muted-foreground pl-1">Assign To (optional)</span>
           <select
@@ -177,35 +187,6 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
           </select>
         </div>
 
-        {/* Show project picker only when not called from within a specific project page */}
-        {id === null && (
-          <div className="space-y-1">
-            <span className="text-xs text-muted-foreground pl-1">Project (required)</span>
-            <select
-              className={selectStyles}
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-            >
-              <option value="">-- Select a project --</option>
-              {projects?.map((project) => (
-                <option key={project._id || project.id} value={project._id || project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-            {projects?.length === 0 && (
-              <p className="text-xs text-destructive pl-1">No projects found. Please create a project first.</p>
-            )}
-          </div>
-        )}
-
-        {/* Author info — read-only display, not an editable field */}
-        {authorUserId && (
-          <p className="text-xs text-muted-foreground pl-1">
-            Author: <span className="font-medium text-foreground">{session?.user?.name}</span>
-          </p>
-        )}
-
         <div className="pt-2">
           <Button
             type="submit"
@@ -214,7 +195,7 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
             disabled={!isFormValid() || isLoading}
             isLoading={isLoading}
           >
-            Create Task
+            Update Task
           </Button>
         </div>
       </form>
@@ -222,4 +203,4 @@ const ModalNewTask = ({ isOpen, onClose, id = null }: Props) => {
   );
 };
 
-export default ModalNewTask;
+export default ModalEditTask;

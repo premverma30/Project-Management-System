@@ -8,6 +8,8 @@ export interface Project {
   description?: string;
   startDate?: string;
   endDate?: string;
+  status?: string;
+  ownerId?: string;
 }
 
 export enum Priority {
@@ -51,9 +53,11 @@ export interface Task {
   description?: string;
   status?: Status;
   priority?: Priority;
-  tags?: string;
+  tags?: string | string[];
   startDate?: string;
   dueDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
   points?: number;
   projectId: string;
   authorUserId?: string;
@@ -75,8 +79,9 @@ export interface Team {
   _id?: string;
   teamId?: string;
   teamName: string;
-  productOwnerUserId?: string;
-  projectManagerUserId?: string;
+  productOwnerUserId?: string | User;
+  projectManagerUserId?: string | User;
+  members?: User[];
 }
 
 export const api = createApi({
@@ -92,7 +97,7 @@ export const api = createApi({
     },
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Tasks", "Users", "Teams"],
+  tagTypes: ["Projects", "Tasks", "Users", "Teams", "AuthUser"],
   endpoints: (build) => ({
     getAuthUser: build.query({
       queryFn: async (_, _queryApi, _extraoptions, fetchWithBQ) => {
@@ -129,6 +134,17 @@ export const api = createApi({
       }),
       invalidatesTags: [{ type: "Projects", id: "LIST" }],
     }),
+    updateProjectStatus: build.mutation<Project, { projectId: string; status: string }>({
+      query: ({ projectId, status }) => ({
+        url: `projects/${projectId}/status`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: (result, error, { projectId }) => [
+        { type: "Projects", id: projectId },
+        { type: "Projects", id: "LIST" },
+      ],
+    }),
     getTasks: build.query<Task[], { projectId: string }>({
       query: ({ projectId }) => `tasks?projectId=${projectId}`,
       providesTags: (result) =>
@@ -155,10 +171,32 @@ export const api = createApi({
         method: "POST",
         body: task,
       }),
-      invalidatesTags: (result, error, arg) => [
-        { type: "Tasks", id: "LIST" },
-        { type: "Tasks", id: `USER_${arg.authorUserId}` },
-      ],
+      invalidatesTags: (result, error, arg) => {
+        // Always use arg.authorUserId as the reliable source (known at call time, always a plain string).
+        // The result may have authorUserId as a populated User object (from .populate()), so we
+        // defensively handle both cases as a fallback.
+        const authorId =
+          arg.authorUserId ??
+          (result?.authorUserId
+            ? typeof result.authorUserId === "string"
+              ? result.authorUserId
+              : (result.authorUserId as any)?._id ?? (result.authorUserId as any)?.id
+            : undefined);
+
+        const assigneeId =
+          arg.assignedUserId ??
+          (result?.assignedUserId
+            ? typeof result.assignedUserId === "string"
+              ? result.assignedUserId
+              : (result.assignedUserId as any)?._id ?? (result.assignedUserId as any)?.id
+            : undefined);
+
+        const tags: any[] = [{ type: "Tasks", id: "LIST" }];
+        if (authorId) tags.push({ type: "Tasks", id: `USER_${authorId}` });
+        if (assigneeId && assigneeId !== authorId)
+          tags.push({ type: "Tasks", id: `USER_${assigneeId}` });
+        return tags;
+      },
     }),
     updateTaskStatus: build.mutation<Task, { taskId: string; status: string }>({
       query: ({ taskId, status }) => ({
@@ -166,9 +204,35 @@ export const api = createApi({
         method: "PATCH",
         body: { status },
       }),
-      invalidatesTags: (result, error, { taskId }) => [
+      invalidatesTags: (result, error, { taskId }) => {
+        const tags: any[] = [{ type: "Tasks", id: "LIST" }, { type: "Tasks", id: taskId }];
+        if (result) {
+           const authorId = typeof result.authorUserId === 'string' ? result.authorUserId : (result.authorUserId as any)?._id || (result.authorUserId as any)?.id;
+           const assigneeId = typeof result.assignedUserId === 'string' ? result.assignedUserId : (result.assignedUserId as any)?._id || (result.assignedUserId as any)?.id;
+           if (authorId) tags.push({ type: "Tasks", id: `USER_${authorId}` });
+           if (assigneeId) tags.push({ type: "Tasks", id: `USER_${assigneeId}` });
+        }
+        return tags;
+      },
+    }),
+    updateTask: build.mutation<Task, { taskId: string; taskData: Partial<Task> }>({
+      query: ({ taskId, taskData }) => ({
+        url: `tasks/${taskId}`,
+        method: "PATCH",
+        body: taskData,
+      }),
+      invalidatesTags: (result, error, { taskId, taskData }) => [
         { type: "Tasks", id: taskId },
+        { type: "Tasks", id: "LIST" },
+        ...(taskData.authorUserId ? [{ type: "Tasks" as const, id: `USER_${taskData.authorUserId}` }] : []),
       ],
+    }),
+    deleteTask: build.mutation<void, string>({
+      query: (taskId) => ({
+        url: `tasks/${taskId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [{ type: "Tasks", id: "LIST" }],
     }),
     getUsers: build.query<User[], void>({
       query: () => "users",
@@ -176,7 +240,47 @@ export const api = createApi({
     }),
     getTeams: build.query<Team[], void>({
       query: () => "teams",
-      providesTags: ["Teams"],
+      providesTags: (result) =>
+        result
+          ? [...result.map((t) => ({ type: "Teams" as const, id: t._id || t.teamId })), { type: "Teams", id: "LIST" }]
+          : [{ type: "Teams", id: "LIST" }],
+    }),
+    createTeam: build.mutation<Team, { teamName: string }>({
+      query: (body) => ({ url: "teams", method: "POST", body }),
+      invalidatesTags: [{ type: "Teams", id: "LIST" }],
+    }),
+    addTeamMember: build.mutation<Team, { teamId: string; userId: string }>({
+      query: ({ teamId, userId }) => ({
+        url: `teams/${teamId}/members`,
+        method: "POST",
+        body: { userId },
+      }),
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: "Teams", id: teamId },
+        { type: "Teams", id: "LIST" },
+      ],
+    }),
+    removeTeamMember: build.mutation<Team, { teamId: string; userId: string }>({
+      query: ({ teamId, userId }) => ({
+        url: `teams/${teamId}/members/${userId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, { teamId }) => [
+        { type: "Teams", id: teamId },
+        { type: "Teams", id: "LIST" },
+      ],
+    }),
+    updateUser: build.mutation<User, { userId: string; userData: Partial<User> }>({
+      query: ({ userId, userData }) => ({
+        url: `users/${userId}`,
+        method: "PATCH",
+        body: userData,
+      }),
+      invalidatesTags: (result, error, { userId }) => [
+        { type: "AuthUser", id: userId },
+        { type: "Users", id: userId },
+        { type: "Users", id: "LIST" },
+      ],
     }),
     search: build.query<SearchResults, string>({
       query: (query) => `search?query=${encodeURIComponent(query)}`,
@@ -187,12 +291,19 @@ export const api = createApi({
 export const {
   useGetProjectsQuery,
   useCreateProjectMutation,
+  useUpdateProjectStatusMutation,
   useGetTasksQuery,
   useCreateTaskMutation,
   useUpdateTaskStatusMutation,
+  useUpdateTaskMutation,
+  useDeleteTaskMutation,
   useSearchQuery,
   useGetUsersQuery,
   useGetTeamsQuery,
+  useCreateTeamMutation,
+  useAddTeamMemberMutation,
+  useRemoveTeamMemberMutation,
   useGetTasksByUserQuery,
   useGetAuthUserQuery,
+  useUpdateUserMutation,
 } = api;

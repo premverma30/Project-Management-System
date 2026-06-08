@@ -16,7 +16,12 @@ type Props = {
 
 const Project = ({ params }: Props) => {
   const { id } = use(params);
-  const [activeTab, setActiveTab] = useState("Board");
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("defaultProjectTab") || "Board";
+    }
+    return "Board";
+  });
   const [isModalNewTaskOpen, setIsModalNewTaskOpen] = useState(false);
 
   const { data: projects } = useGetProjectsQuery();
@@ -33,7 +38,7 @@ const Project = ({ params }: Props) => {
       <ProjectHeader 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
-        projectName={projectName}
+        project={project}
       />
       {activeTab === "Board" && (
         <Board id={id} setIsModalNewTaskOpen={setIsModalNewTaskOpen} />

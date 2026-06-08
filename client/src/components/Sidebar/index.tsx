@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  Plus,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,10 +26,12 @@ import { useAppDispatch, useAppSelector } from "@/app/redux";
 import { setIsSidebarCollapsed } from "@/state";
 import { useGetProjectsQuery } from "@/state/api";
 import { useSession, signOut } from "next-auth/react";
+import ModalNewProject from "@/app/project/ModalNewProject";
 
 const Sidebar = () => {
   const [showProjects, setShowProjects] = useState(true);
   const [showPriority, setShowPriority] = useState(true);
+  const [isModalNewProjectOpen, setIsModalNewProjectOpen] = useState(false);
 
   const { data: projects } = useGetProjectsQuery();
   const dispatch = useAppDispatch();
@@ -48,7 +51,7 @@ const Sidebar = () => {
         {/* TOP LOGO */}
         <div className="z-50 flex min-h-[72px] w-64 items-center justify-between px-6 pt-3">
           <div className="text-xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
-            NEXTASK AI
+            NEXTASK
           </div>
           {isSidebarCollapsed ? null : (
             <button
@@ -90,17 +93,37 @@ const Sidebar = () => {
         </nav>
 
         {/* PROJECTS LINKS */}
-        <button
-          onClick={() => setShowProjects((prev) => !prev)}
-          className="flex w-full items-center justify-between px-8 py-3 text-gray-500"
-        >
-          <span>Projects</span>
-          {showProjects ? (
-            <ChevronUp className="h-5 w-5" />
-          ) : (
-            <ChevronDown className="h-5 w-5" />
-          )}
-        </button>
+        <ModalNewProject
+          isOpen={isModalNewProjectOpen}
+          onClose={() => setIsModalNewProjectOpen(false)}
+        />
+
+        <div className="flex w-full items-center justify-between px-8 py-3 text-gray-500">
+          <button
+            onClick={() => setShowProjects((prev) => !prev)}
+            className="flex items-center gap-1 hover:text-foreground transition-colors"
+          >
+            <span>Projects</span>
+            {showProjects ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
+          <button
+            onClick={() => setIsModalNewProjectOpen(true)}
+            title="Create new project"
+            className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+
+        {showProjects && projects?.length === 0 && (
+          <p className="px-8 py-2 text-xs text-muted-foreground italic">
+            No projects yet. Click + to create one.
+          </p>
+        )}
         {showProjects &&
           projects?.map((project) => (
             <SidebarLink

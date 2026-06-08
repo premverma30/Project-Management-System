@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { Menu, Moon, Search, Settings, Sun, User, LogOut } from "lucide-react";
+import { Menu, Moon, Search, Settings, Sun, User, LogOut, Bell } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/app/redux";
 import { setIsDarkMode, setIsSidebarCollapsed } from "@/state";
 import { useSession, signOut } from "next-auth/react";
+import { useGetTasksByUserQuery } from "@/state/api";
 import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import { useState } from "react";
@@ -15,7 +16,17 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { data: session } = useSession();
+  const userId = (session as any)?.mongoId as string | undefined;
+  const { data: tasks } = useGetTasksByUserQuery(userId ?? "", { skip: !userId });
+  
   const [searchQuery, setSearchQuery] = useState("");
+
+  const hasNotifications = tasks?.some(
+    (task) => 
+      task.status !== "Completed" && 
+      (task.priority === "Urgent" || task.priority === "High") &&
+      task.assignedUserId === userId
+  );
 
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode);
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed);
@@ -67,6 +78,13 @@ const Navbar = () => {
             <Sun className="h-5 w-5" />
           ) : (
             <Moon className="h-5 w-5" />
+          )}
+        </button>
+
+        <button className="relative rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+          <Bell className="h-5 w-5" />
+          {hasNotifications && (
+            <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"></span>
           )}
         </button>
 

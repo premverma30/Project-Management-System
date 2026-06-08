@@ -7,11 +7,14 @@ import {
   useGetProjectsQuery,
   useGetTasksByUserQuery,
 } from "@/state/api";
-import React from "react";
+import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useAppSelector } from "../redux";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import Header from "@/components/Header";
+import { Button } from "@/components/ui/Button";
+import { PlusSquare } from "lucide-react";
+import ModalNewTask from "@/components/ModalNewTask";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import {
   Bar,
@@ -75,6 +78,7 @@ const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 const HomePage = () => {
   const { data: session } = useSession();
+  const [isModalNewTaskOpen, setIsModalNewTaskOpen] = useState(false);
 
   // CRIT-04 FIX: Previously used useGetTasksQuery({ projectId: "" }) which fetched
   // ALL tasks from the entire database — a privacy violation and performance issue.
@@ -144,6 +148,18 @@ const HomePage = () => {
     count: statusCount[key],
   }));
 
+  // Generate Activity Feed from recent tasks
+  const recentActivities = [...(tasks || [])]
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt || "").getTime() - new Date(a.updatedAt || a.createdAt || "").getTime())
+    .slice(0, 5)
+    .map(task => ({
+      id: task._id || task.id,
+      title: task.title,
+      status: task.status,
+      author: task.author ? task.author.username : "Someone",
+      time: new Date(task.updatedAt || task.createdAt || "").toLocaleDateString()
+    }));
+
   const chartColors = isDarkMode
     ? {
         bar: "#60a5fa",
@@ -169,7 +185,21 @@ const HomePage = () => {
 
   return (
     <div className="h-full w-full px-6 py-8">
-      <Header name="Dashboard" />
+      <div className="flex items-center justify-between">
+        <Header name="Dashboard" />
+        <Button
+          onClick={() => setIsModalNewTaskOpen(true)}
+          className="flex items-center rounded bg-primary px-3 py-2 text-primary-foreground hover:bg-primary/90"
+        >
+          <PlusSquare className="mr-2 h-4 w-4" />
+          Create Task
+        </Button>
+      </div>
+
+      <ModalNewTask
+        isOpen={isModalNewTaskOpen}
+        onClose={() => setIsModalNewTaskOpen(false)}
+      />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 mt-6">
         {/* Task Priority Distribution */}
@@ -255,6 +285,38 @@ const HomePage = () => {
           </CardContent>
         </Card>
 
+        {/* Recent Activity Feed */}
+        <Card variant="glass" className="overflow-hidden md:col-span-2">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {recentActivities.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No recent activity.</div>
+              ) : (
+                recentActivities.map((activity, idx) => (
+                  <div key={activity.id || idx} className="flex items-start gap-4 border-b border-border pb-4 last:border-0 last:pb-0">
+                    <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0 mt-1">
+                      {activity.author.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <p className="text-sm text-foreground">
+                        <span className="font-medium">{activity.author}</span> updated task <span className="font-medium text-primary">"{activity.title}"</span>
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{activity.time}</span>
+                        <span>•</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5">{activity.status}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Your Tasks table — scoped to current user */}
         <Card variant="glass" className="overflow-hidden md:col-span-2">
           <CardHeader>
@@ -275,7 +337,7 @@ const HomePage = () => {
                 checkboxSelection
                 loading={tasksLoading}
                 getRowId={(row) => row._id ?? row.id}
-                className={`${dataGridClassNames} !border-none`}
+                className={`${dataGridClassNames} !bg-transparent !border-none`}
                 sx={dataGridSxStyles(isDarkMode)}
                 initialState={{
                   pagination: { paginationModel: { pageSize: 10 } },

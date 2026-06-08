@@ -6,15 +6,19 @@ import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Project, useUpdateProjectStatusMutation, useGetAuthUserQuery } from "@/state/api";
+
 type Props = {
   activeTab: string;
   setActiveTab: (tabName: string) => void;
-  projectName: string;
+  project?: Project;
 };
 
-const ProjectHeader = ({ activeTab, setActiveTab, projectName }: Props) => {
+const ProjectHeader = ({ activeTab, setActiveTab, project }: Props) => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: authUser } = useGetAuthUserQuery(undefined);
+  const [updateStatus] = useUpdateProjectStatusMutation();
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && searchQuery.trim()) {
@@ -22,10 +26,46 @@ const ProjectHeader = ({ activeTab, setActiveTab, projectName }: Props) => {
     }
   };
 
+  const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!project) return;
+    const newStatus = e.target.value;
+    const projectId = project.id || (project as any)._id;
+    if (projectId) {
+      await updateStatus({ projectId, status: newStatus });
+    }
+  };
+
+  const isOwner = authUser && project?.ownerId === (authUser.id || (authUser as any)._id);
+  const projectName = project?.name || "Project";
+
   return (
     <div className="px-6 pb-6 pt-4">
       <div className="flex items-center justify-between pb-6">
         <Header name={projectName} />
+        {project && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-muted-foreground">Status:</span>
+            {isOwner ? (
+              <select
+                value={project.status || "Active"}
+                onChange={handleStatusChange}
+                className="h-9 rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="Active">Active</option>
+                <option value="Completed">Completed</option>
+                <option value="Archived">Archived</option>
+              </select>
+            ) : (
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${
+                project.status === "Completed" ? "bg-green-500/10 text-green-600 border border-green-500/20" :
+                project.status === "Archived" ? "bg-muted text-muted-foreground border border-border" :
+                "bg-blue-500/10 text-blue-600 border border-blue-500/20"
+              }`}>
+                {project.status || "Active"}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* TABS */}

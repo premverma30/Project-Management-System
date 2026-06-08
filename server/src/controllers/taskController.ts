@@ -116,12 +116,21 @@ export const createTask = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(403, "Not authorized to add tasks to this project");
   }
 
+  let processedTags: string[] | undefined;
+  if (tags !== undefined && tags !== null) {
+    if (Array.isArray(tags)) {
+      processedTags = tags.flatMap((t: any) => String(t).split(",").map((x) => x.trim())).filter(Boolean);
+    } else if (typeof tags === "string") {
+      processedTags = tags.split(",").map((t) => t.trim()).filter(Boolean);
+    }
+  }
+
   const newTask = await Task.create({
     title,
     ...(description && { description }),
     ...(status && { status }),
     ...(priority && { priority }),
-    ...(tags && { tags }),
+    ...(processedTags && { tags: processedTags }),
     ...(startDate && { startDate: new Date(startDate) }),
     ...(dueDate && { dueDate: new Date(dueDate) }),
     ...(points && { points }),
@@ -170,6 +179,79 @@ export const updateTaskStatus = asyncHandler(
       { status },
       { new: true }
     );
+
+    res.json(updatedTask);
+  }
+);
+
+export const updateTask = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { taskId } = req.params;
+    const {
+      title,
+      description,
+      status,
+      priority,
+      tags,
+      startDate,
+      dueDate,
+      points,
+      assignedUserId,
+    } = req.body;
+
+    if (!taskId || !mongoose.Types.ObjectId.isValid(taskId as string)) {
+      throw new ApiError(400, "Invalid task ID");
+    }
+
+    const task = await Task.findById(taskId);
+    if (!task) {
+      throw new ApiError(404, "Task not found");
+    }
+
+    const userId = req.user?.id;
+    if (task.authorUserId.toString() !== userId && task.assignedUserId?.toString() !== userId) {
+      const projectFilter: any = {
+        _id: task.projectId,
+        $or: [{ ownerId: userId }, { members: userId }],
+      };
+      const project = await Project.findOne(projectFilter);
+      if (!project) {
+        throw new ApiError(403, "Not authorized to update this task");
+      }
+    }
+
+    if (assignedUserId && !mongoose.Types.ObjectId.isValid(assignedUserId)) {
+      throw new ApiError(400, "Invalid assigned user ID");
+    }
+
+    const updateData: any = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (status !== undefined) updateData.status = status;
+    if (priority !== undefined) updateData.priority = priority;
+    if (tags !== undefined) {
+      if (tags === null) {
+        updateData.tags = [];
+      } else if (Array.isArray(tags)) {
+        updateData.tags = tags.flatMap((t: any) => String(t).split(",").map((x) => x.trim())).filter(Boolean);
+      } else if (typeof tags === "string") {
+        updateData.tags = tags.split(",").map((t) => t.trim()).filter(Boolean);
+      } else {
+        updateData.tags = [];
+      }
+    }
+    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
+    if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    if (points !== undefined) updateData.points = points;
+    if (assignedUserId !== undefined) updateData.assignedUserId = assignedUserId || null;
+
+    const updatedTask = await Task.findByIdAndUpdate(
+      taskId,
+      updateData,
+      { new: true }
+    )
+      .populate("authorUserId", "username profilePictureUrl email")
+      .populate("assignedUserId", "username profilePictureUrl email");
 
     res.json(updatedTask);
   }

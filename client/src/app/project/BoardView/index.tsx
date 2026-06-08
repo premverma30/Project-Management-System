@@ -139,7 +139,11 @@ const Task = ({ task }: TaskProps) => {
     }),
   }));
 
-  const taskTagsSplit = task.tags ? task.tags.split(",") : [];
+  const taskTagsSplit = task.tags
+    ? (Array.isArray(task.tags)
+        ? task.tags.flatMap((tag) => tag.split(",").map((t) => t.trim()))
+        : String(task.tags).split(",").map((t) => t.trim()))
+    : [];
 
   const formattedStartDate = task.startDate
     ? format(new Date(task.startDate), "MMM d")

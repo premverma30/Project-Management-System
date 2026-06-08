@@ -14,12 +14,9 @@ export const dataGridClassNames =
  */
 export const dataGridSxStyles = (_isDarkMode: boolean) => {
   return {
-    // Root container
-    "& .MuiDataGrid-root": {
-      backgroundColor: "transparent",
-      border: "none",
-      color: "hsl(var(--foreground))",
-    },
+    border: "none",
+    backgroundColor: "transparent",
+    color: "hsl(var(--foreground))",
     // Main content area (where rows render)
     "& .MuiDataGrid-main": {
       backgroundColor: "transparent",
