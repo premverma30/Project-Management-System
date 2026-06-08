@@ -18,7 +18,7 @@ export interface ITask extends Document {
   description?: string;
   status?: string;
   priority?: string;
-  tags?: string;
+  tags?: string[];
   startDate?: Date;
   dueDate?: Date;
   points?: number;
@@ -34,7 +34,7 @@ const TaskSchema: Schema = new Schema(
     description: { type: String },
     status: { type: String, enum: ['To Do', 'Work In Progress', 'Under Review', 'Completed'], default: 'To Do' },
     priority: { type: String, enum: ['Urgent', 'High', 'Medium', 'Low', 'Backlog'], default: 'Medium' },
-    tags: { type: String },
+    tags: [{ type: String }],
     startDate: { type: Date },
     dueDate: { type: Date },
     points: { type: Number },
@@ -45,5 +45,9 @@ const TaskSchema: Schema = new Schema(
   },
   { timestamps: true }
 );
+
+TaskSchema.index({ projectId: 1 });
+TaskSchema.index({ authorUserId: 1 });
+TaskSchema.index({ assignedUserId: 1 });
 
 export default mongoose.model<ITask>('Task', TaskSchema);

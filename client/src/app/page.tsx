@@ -12,7 +12,6 @@ import {
   Cloud,
   Lock,
   ChevronDown,
-  CheckCircle,
   ArrowRight,
   Github,
   Twitter,
@@ -20,9 +19,9 @@ import {
   Menu,
   X,
   PlayCircle,
-  Upload,
-  Cpu,
-  LineChart
+  Users,
+  FolderKanban,
+  CheckSquare
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -36,7 +35,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-purple-500/30 font-sans">
+    <div className="min-h-screen bg-black text-white selection:bg-blue-500/30 font-sans">
       {/* Navbar */}
       <header
         className={`fixed top-0 z-50 w-full transition-all duration-300 ${
@@ -47,10 +46,10 @@ export default function LandingPage() {
       >
         <div className="container mx-auto px-6 md:px-12 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 shadow-lg group-hover:neon-glow transition-all">
-              <Brain className="h-6 w-6 text-white" />
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg group-hover:neon-glow transition-all">
+              <CheckSquare className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight">NexTask <span className="text-purple-400">AI</span></span>
+            <span className="text-xl font-bold tracking-tight">NexTask <span className="text-blue-400">Enterprise</span></span>
           </Link>
 
           {/* Desktop Nav */}
@@ -58,7 +57,6 @@ export default function LandingPage() {
             <Link href="#features" className="hover:text-white transition-colors">Features</Link>
             <Link href="#how-it-works" className="hover:text-white transition-colors">How it Works</Link>
             <Link href="#testimonials" className="hover:text-white transition-colors">Testimonials</Link>
-            <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
             <Link href="#faq" className="hover:text-white transition-colors">FAQ</Link>
           </nav>
 
@@ -67,7 +65,7 @@ export default function LandingPage() {
               Log in
             </button>
             <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black hover:bg-gray-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-              Get Started
+              Open Workspace
             </button>
           </div>
 
@@ -94,11 +92,10 @@ export default function LandingPage() {
               <Link href="#features" onClick={() => setMobileMenuOpen(false)}>Features</Link>
               <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>How it Works</Link>
               <Link href="#testimonials" onClick={() => setMobileMenuOpen(false)}>Testimonials</Link>
-              <Link href="#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
               <Link href="#faq" onClick={() => setMobileMenuOpen(false)}>FAQ</Link>
               <div className="h-px w-full bg-white/10 my-4" />
               <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="w-full text-center py-3 rounded-lg border border-white/20">Log in</button>
-              <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="w-full text-center py-3 rounded-lg bg-white text-black font-bold">Get Started</button>
+              <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="w-full text-center py-3 rounded-lg bg-white text-black font-bold">Open Workspace</button>
             </div>
           </motion.div>
         )}
@@ -108,18 +105,18 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
           {/* Background Gradients */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-600/30 rounded-full blur-[120px] -z-10 pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-[500px] h-[400px] bg-blue-600/20 rounded-full blur-[100px] -z-10 pointer-events-none" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] -z-10 pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
           <div className="container mx-auto px-6 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm font-medium text-purple-300 mb-8"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass text-sm font-medium text-blue-300 mb-8"
             >
-              <span className="flex h-2 w-2 rounded-full bg-purple-500 animate-pulse"></span>
-              NexTask AI 2.0 is now live
+              <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+              NexTask Enterprise 2.0 is now live
             </motion.div>
 
             <motion.h1
@@ -128,7 +125,7 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 max-w-4xl mx-auto leading-tight"
             >
-              The Future of Project Management is <span className="text-gradient">Intelligent</span>
+              The Modern Standard for <span className="text-gradient">Team Productivity</span>
             </motion.h1>
 
             <motion.p
@@ -137,7 +134,7 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto"
             >
-              Supercharge your team's productivity with our AI-powered platform. Automate workflows, gain smart insights, and build faster than ever before.
+              Unify your organization's workflow with powerful task management, seamless collaboration, and robust enterprise-grade security.
             </motion.p>
 
             <motion.div
@@ -147,10 +144,10 @@ export default function LandingPage() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
             >
               <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-gray-100 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 flex items-center justify-center gap-2">
-                Start for free <ArrowRight className="h-5 w-5" />
+                Open Workspace <ArrowRight className="h-5 w-5" />
               </button>
               <button className="w-full sm:w-auto px-8 py-4 rounded-full glass font-medium text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 group">
-                <PlayCircle className="h-5 w-5 text-gray-300 group-hover:text-purple-400 transition-colors" /> Watch Demo
+                <PlayCircle className="h-5 w-5 text-gray-300 group-hover:text-blue-400 transition-colors" /> Watch Demo
               </button>
             </motion.div>
 
@@ -184,12 +181,12 @@ export default function LandingPage() {
                     </div>
                     <div className="flex-1 flex flex-col gap-6">
                       <div className="flex gap-4">
-                        <div className="flex-1 h-24 bg-gradient-to-br from-purple-500/20 to-transparent border border-purple-500/30 rounded-xl p-4 flex flex-col justify-between">
-                           <div className="h-3 w-20 bg-purple-400/50 rounded"></div>
-                           <div className="h-6 w-12 bg-white/80 rounded"></div>
-                        </div>
                         <div className="flex-1 h-24 bg-gradient-to-br from-blue-500/20 to-transparent border border-blue-500/30 rounded-xl p-4 flex flex-col justify-between">
                            <div className="h-3 w-20 bg-blue-400/50 rounded"></div>
+                           <div className="h-6 w-12 bg-white/80 rounded"></div>
+                        </div>
+                        <div className="flex-1 h-24 bg-gradient-to-br from-indigo-500/20 to-transparent border border-indigo-500/30 rounded-xl p-4 flex flex-col justify-between">
+                           <div className="h-3 w-20 bg-indigo-400/50 rounded"></div>
                            <div className="h-6 w-12 bg-white/80 rounded"></div>
                         </div>
                         <div className="hidden sm:flex flex-1 h-24 bg-gradient-to-br from-emerald-500/20 to-transparent border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between">
@@ -199,12 +196,11 @@ export default function LandingPage() {
                       </div>
                       <div className="flex-1 border border-white/5 bg-white/[0.02] rounded-xl relative overflow-hidden">
                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                        {/* Fake chart bars */}
                         <div className="absolute bottom-0 left-0 right-0 p-8 flex items-end justify-between gap-2 h-48">
                           {[40, 70, 45, 90, 65, 85, 100, 60].map((h, i) => (
                             <motion.div 
                               key={i} 
-                              className="w-full bg-gradient-to-t from-purple-600 to-blue-400 rounded-t-sm"
+                              className="w-full bg-gradient-to-t from-blue-600 to-indigo-400 rounded-t-sm"
                               initial={{ height: 0 }}
                               animate={{ height: `${h}%` }}
                               transition={{ duration: 1, delay: 0.5 + i * 0.1 }}
@@ -224,18 +220,18 @@ export default function LandingPage() {
         <section id="features" className="py-24 relative z-10 border-t border-white/5 bg-[#050505]">
           <div className="container mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">Supercharged by <span className="text-gradient">AI</span></h2>
-              <p className="text-gray-400 max-w-2xl mx-auto text-lg">Everything you need to manage projects at the speed of thought.</p>
+              <h2 className="text-3xl md:text-5xl font-bold mb-4">Engineered for <span className="text-gradient">Scale</span></h2>
+              <p className="text-gray-400 max-w-2xl mx-auto text-lg">Everything your organization needs to manage complex projects effortlessly.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { icon: <Zap className="h-6 w-6 text-yellow-400" />, title: "Real-time Processing", desc: "Experience zero latency with our highly optimized edge infrastructure." },
-                { icon: <Brain className="h-6 w-6 text-purple-400" />, title: "AI Automation", desc: "Let AI handle the repetitive tasks while you focus on what matters most." },
-                { icon: <BarChart className="h-6 w-6 text-blue-400" />, title: "Smart Analytics", desc: "Gain deep insights with automatically generated reports and predictive metrics." },
-                { icon: <Lock className="h-6 w-6 text-red-400" />, title: "Enterprise Security", desc: "Bank-grade encryption and compliance built-in from day one." },
-                { icon: <Cloud className="h-6 w-6 text-cyan-400" />, title: "Cloud Sync", desc: "Access your workspace from anywhere, perfectly synced across all devices." },
-                { icon: <Shield className="h-6 w-6 text-emerald-400" />, title: "Robust Permissions", desc: "Granular access control tailored to your organization's exact needs." },
+                { icon: <FolderKanban className="h-6 w-6 text-blue-400" />, title: "Project Portfolios", desc: "Organize tasks into hierarchical projects with clear ownership and timelines." },
+                { icon: <Users className="h-6 w-6 text-indigo-400" />, title: "Team Collaboration", desc: "Assign tasks, share context, and keep everyone aligned on a single platform." },
+                { icon: <BarChart className="h-6 w-6 text-emerald-400" />, title: "Advanced Reporting", desc: "Gain deep insights into team productivity, bottlenecks, and project health." },
+                { icon: <Lock className="h-6 w-6 text-red-400" />, title: "Enterprise Security", desc: "Bank-grade encryption, secure session management, and robust access controls." },
+                { icon: <Cloud className="h-6 w-6 text-cyan-400" />, title: "Cloud Native", desc: "Access your workspace from anywhere with reliable, high-performance syncing." },
+                { icon: <Shield className="h-6 w-6 text-yellow-400" />, title: "Granular Permissions", desc: "Define precise access levels for team members across different workspaces." },
               ].map((feature, i) => (
                 <motion.div
                   key={i}
@@ -243,7 +239,7 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="p-6 rounded-2xl glass hover:bg-white/[0.08] transition-colors border border-white/10 hover:border-purple-500/30 group"
+                  className="p-6 rounded-2xl glass hover:bg-white/[0.08] transition-colors border border-white/10 hover:border-blue-500/30 group"
                 >
                   <div className="h-12 w-12 rounded-xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     {feature.icon}
@@ -258,23 +254,21 @@ export default function LandingPage() {
 
         {/* How It Works Section */}
         <section id="how-it-works" className="py-24 bg-black relative">
-           {/* Decorative blurred blob */}
-           <div className="absolute top-1/2 left-0 w-96 h-96 bg-purple-600/10 rounded-full blur-[100px] -z-10 transform -translate-y-1/2" />
+           <div className="absolute top-1/2 left-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] -z-10 transform -translate-y-1/2" />
            
            <div className="container mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-5xl font-bold mb-4">How it <span className="text-gradient">Works</span></h2>
-              <p className="text-gray-400 max-w-2xl mx-auto text-lg">Three simple steps to transform your workflow forever.</p>
+              <p className="text-gray-400 max-w-2xl mx-auto text-lg">Three simple steps to bring order to the chaos.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 lg:gap-12 relative">
-               {/* Connecting Line */}
-               <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-purple-500/30 to-transparent -translate-y-1/2 z-0" />
+               <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent -translate-y-1/2 z-0" />
 
                {[
-                 { step: "01", icon: <Upload />, title: "Upload Data", desc: "Connect your existing tools or upload your datasets securely to our cloud." },
-                 { step: "02", icon: <Cpu />, title: "AI Processing", desc: "Our neural networks analyze, categorize, and optimize your data instantly." },
-                 { step: "03", icon: <LineChart />, title: "Get Results", desc: "Receive actionable insights and automated workflows directly on your dashboard." },
+                 { step: "01", icon: <Users />, title: "Create Your Team", desc: "Set up a secure workspace and invite your colleagues with role-based access." },
+                 { step: "02", icon: <FolderKanban />, title: "Plan Projects", desc: "Break down large goals into actionable tasks with due dates and priorities." },
+                 { step: "03", icon: <Zap />, title: "Execute Faster", desc: "Track progress through lists, boards, and timelines, ensuring nothing falls through the cracks." },
                ].map((item, i) => (
                  <motion.div
                    key={i}
@@ -285,7 +279,7 @@ export default function LandingPage() {
                    className="relative z-10 flex flex-col items-center text-center p-8 rounded-2xl bg-black border border-white/10"
                  >
                    <div className="absolute -top-4 -right-4 text-6xl font-black text-white/5">{item.step}</div>
-                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/20">
+                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20">
                      {React.cloneElement(item.icon as React.ReactElement, { className: "h-8 w-8 text-white" })}
                    </div>
                    <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
@@ -299,13 +293,13 @@ export default function LandingPage() {
         {/* Testimonials */}
         <section id="testimonials" className="py-24 bg-[#050505] border-t border-b border-white/5">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl md:text-5xl font-bold text-center mb-16">Loved by <span className="text-gradient">Innovators</span></h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-center mb-16">Trusted by <span className="text-gradient">Leaders</span></h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { name: "Sarah Jenkins", role: "CTO at TechFlow", text: "NexTask AI has completely revolutionized how our engineering team plans sprints. It's like having a dedicated agile coach powered by machine learning." },
-                { name: "David Chen", role: "Product Manager", text: "The predictive analytics are scary accurate. It told us our project was going to be delayed weeks before we realized it ourselves." },
-                { name: "Elena Rodriguez", role: "Startup Founder", text: "Beautiful design, insanely fast performance, and an AI that actually understands context. Worth every penny for the Pro tier." }
+                { name: "Sarah Jenkins", role: "VP of Engineering at TechFlow", text: "NexTask has completely transformed how our development teams coordinate. The UI is incredibly fast, and the data grid performance is unmatched." },
+                { name: "David Chen", role: "Product Manager", text: "Finally, a project management tool that gets out of the way. It's clean, intuitive, and handles thousands of tasks without breaking a sweat." },
+                { name: "Elena Rodriguez", role: "Operations Director", text: "The transition was seamless. We migrated our entire company workspace in days, and team adoption has been universally positive." }
               ].map((testimonial, i) => (
                 <motion.div
                   key={i}
@@ -317,7 +311,7 @@ export default function LandingPage() {
                 >
                   <p className="text-gray-300 italic mb-8">"{testimonial.text}"</p>
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-400 to-blue-500 flex items-center justify-center font-bold text-sm">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center font-bold text-sm">
                       {testimonial.name.charAt(0)}
                     </div>
                     <div>
@@ -331,86 +325,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Pricing */}
-        <section id="pricing" className="py-24 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[150px] -z-10" />
-          
-          <div className="container mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">Simple, transparent <span className="text-gradient">pricing</span></h2>
-              <p className="text-gray-400 max-w-2xl mx-auto text-lg">Start for free, upgrade when you need more power.</p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-center">
-              {/* Free Plan */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="p-8 rounded-3xl glass border border-white/10 h-fit"
-              >
-                <h3 className="text-xl font-medium text-gray-400 mb-2">Hobby</h3>
-                <div className="text-4xl font-bold mb-6">$0<span className="text-lg text-gray-500 font-normal">/mo</span></div>
-                <ul className="space-y-4 mb-8">
-                  {["Up to 3 projects", "Basic task management", "Community support", "1GB storage"].map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
-                      <CheckCircle className="h-4 w-4 text-purple-500" /> {feature}
-                    </li>
-                  ))}
-                </ul>
-                <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="block w-full py-3 px-4 rounded-xl text-center font-medium bg-white/10 hover:bg-white/20 transition-colors">
-                  Get Started
-                </button>
-              </motion.div>
-
-              {/* Pro Plan */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="p-8 rounded-3xl bg-gradient-to-b from-purple-900/40 to-black border border-purple-500/50 relative transform lg:-translate-y-4 shadow-2xl neon-glow"
-              >
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-xs font-bold tracking-wide">
-                  MOST POPULAR
-                </div>
-                <h3 className="text-xl font-medium text-purple-300 mb-2">Pro</h3>
-                <div className="text-5xl font-bold mb-6">$29<span className="text-lg text-gray-500 font-normal">/mo</span></div>
-                <ul className="space-y-4 mb-8">
-                  {["Unlimited projects", "Advanced AI analytics", "Priority support", "Automated workflows", "100GB storage"].map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm text-gray-100">
-                      <CheckCircle className="h-5 w-5 text-purple-400" /> {feature}
-                    </li>
-                  ))}
-                </ul>
-                <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="block w-full py-4 px-4 rounded-xl text-center font-bold bg-white text-black hover:bg-gray-200 transition-colors shadow-lg">
-                  Start Free Trial
-                </button>
-              </motion.div>
-
-              {/* Enterprise Plan */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="p-8 rounded-3xl glass border border-white/10 h-fit"
-              >
-                <h3 className="text-xl font-medium text-gray-400 mb-2">Enterprise</h3>
-                <div className="text-4xl font-bold mb-6">Custom</div>
-                <ul className="space-y-4 mb-8">
-                  {["Everything in Pro", "SSO integration", "Dedicated account manager", "Custom contracts", "Unlimited storage"].map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
-                      <CheckCircle className="h-4 w-4 text-purple-500" /> {feature}
-                    </li>
-                  ))}
-                </ul>
-                <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="block w-full py-3 px-4 rounded-xl text-center font-medium bg-white/10 hover:bg-white/20 transition-colors">
-                  Contact Sales
-                </button>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
         {/* FAQ */}
         <section id="faq" className="py-24 bg-[#050505] border-t border-white/5">
           <div className="container mx-auto px-6 max-w-3xl">
@@ -418,10 +332,10 @@ export default function LandingPage() {
             
             <div className="space-y-4">
               {[
-                { q: "How does the AI automation work?", a: "Our proprietary AI models analyze your project data to identify bottlenecks, suggest resource reallocations, and automatically generate routine tasks based on your historical patterns." },
-                { q: "Is my data secure?", a: "Yes. All data is encrypted at rest and in transit. We are SOC2 compliant and never train our public AI models on your private corporate data." },
-                { q: "Can I integrate with other tools?", a: "Absolutely! NexTask AI features out-of-the-box integrations with Slack, GitHub, Jira, and over 100+ other popular SaaS platforms via our API." },
-                { q: "Do you offer a free trial?", a: "We offer a 14-day fully-featured free trial for our Pro plan. No credit card required to start." },
+                { q: "How secure is my organization's data?", a: "Security is our top priority. All data is encrypted at rest and in transit. We implement secure JWT-based authentication, strict cross-origin resource sharing policies, and rigorous authorization checks at both the database and API layers." },
+                { q: "Is this suitable for large enterprise teams?", a: "Yes. NexTask Enterprise is built on a scalable Node.js backend with MongoDB, designed specifically to handle large volumes of tasks, attachments, and simultaneous users without performance degradation." },
+                { q: "How do I manage user permissions?", a: "Organizations can group users into teams, and projects can be securely scoped to specific teams or users. This ensures data privacy and strict access control across the entire platform." },
+                { q: "Do you offer technical support?", a: "Yes, our platform is actively maintained with regular updates to address performance, security, and feature enhancements to support enterprise workflows." },
               ].map((faq, i) => (
                 <FaqItem key={i} question={faq.q} answer={faq.a} />
               ))}
@@ -433,14 +347,13 @@ export default function LandingPage() {
         <section className="py-24 relative overflow-hidden">
           <div className="container mx-auto px-6">
             <div className="relative rounded-3xl overflow-hidden glass p-12 md:p-24 text-center border border-white/20">
-              {/* Dynamic Animated Gradient Background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-900/50 via-blue-900/50 to-purple-900/50 -z-10 bg-[length:200%_auto] animate-gradient" />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-900/50 via-indigo-900/50 to-blue-900/50 -z-10 bg-[length:200%_auto] animate-gradient" />
               
-              <h2 className="text-4xl md:text-6xl font-bold mb-6">Ready to build the future?</h2>
-              <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">Join thousands of forward-thinking teams already using NexTask AI to do their best work.</p>
+              <h2 className="text-4xl md:text-6xl font-bold mb-6">Ready to align your team?</h2>
+              <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">Create your secure enterprise workspace today and bring clarity to your organization's projects.</p>
               
               <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:scale-105 transition-transform shadow-[0_0_40px_rgba(255,255,255,0.4)]">
-                Get Started for Free <Zap className="h-5 w-5 text-purple-600" />
+                Open Workspace <ArrowRight className="h-5 w-5 text-blue-600" />
               </button>
             </div>
           </div>
@@ -453,10 +366,10 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
             <div className="col-span-2 lg:col-span-2">
               <Link href="/" className="flex items-center gap-2 mb-4">
-                <Brain className="h-6 w-6 text-purple-500" />
-                <span className="text-xl font-bold tracking-tight">NexTask AI</span>
+                <CheckSquare className="h-6 w-6 text-blue-500" />
+                <span className="text-xl font-bold tracking-tight">NexTask Enterprise</span>
               </Link>
-              <p className="text-gray-400 text-sm max-w-xs mb-6">Empowering teams to achieve more with the world's most intelligent project management platform.</p>
+              <p className="text-gray-400 text-sm max-w-xs mb-6">Empowering teams to achieve more with robust, secure, and intuitive project management.</p>
               <div className="flex gap-4">
                 <a href="#" className="text-gray-400 hover:text-white transition-colors"><Twitter className="h-5 w-5" /></a>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors"><Github className="h-5 w-5" /></a>
@@ -469,7 +382,7 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Changelog</a></li>
               </ul>
             </div>
@@ -489,14 +402,14 @@ export default function LandingPage() {
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Security Overview</a></li>
               </ul>
             </div>
           </div>
           
           <div className="pt-8 border-t border-white/10 text-center text-sm text-gray-500 flex flex-col md:flex-row justify-between items-center">
-            <p>© {new Date().getFullYear()} NexTask AI Inc. All rights reserved.</p>
-            <p className="mt-2 md:mt-0">Designed with precision for the modern web.</p>
+            <p>© {new Date().getFullYear()} NexTask Enterprise Inc. All rights reserved.</p>
+            <p className="mt-2 md:mt-0">Built for scale.</p>
           </div>
         </div>
       </footer>

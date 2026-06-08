@@ -61,6 +61,7 @@ const Sidebar = () => {
             </button>
           )}
         </div>
+
         {/* TEAM */}
         <div className="flex items-center gap-4 border-y border-border px-6 py-5">
           <div className="relative h-10 w-10 flex-shrink-0">
@@ -76,9 +77,11 @@ const Sidebar = () => {
             </div>
           </div>
         </div>
+
         {/* NAVBAR LINKS */}
         <nav className="z-10 w-full">
-          <SidebarLink icon={Home} label="Home" href="/" />
+          {/* MAJ-08 FIX: Changed from "/" (landing page) to "/home" (dashboard) */}
+          <SidebarLink icon={Home} label="Home" href="/home" />
           <SidebarLink icon={Briefcase} label="Timeline" href="/timeline" />
           <SidebarLink icon={Search} label="Search" href="/search" />
           <SidebarLink icon={Settings} label="Settings" href="/settings" />
@@ -91,14 +94,13 @@ const Sidebar = () => {
           onClick={() => setShowProjects((prev) => !prev)}
           className="flex w-full items-center justify-between px-8 py-3 text-gray-500"
         >
-          <span className="">Projects</span>
+          <span>Projects</span>
           {showProjects ? (
             <ChevronUp className="h-5 w-5" />
           ) : (
             <ChevronDown className="h-5 w-5" />
           )}
         </button>
-        {/* PROJECTS LIST */}
         {showProjects &&
           projects?.map((project) => (
             <SidebarLink
@@ -114,7 +116,7 @@ const Sidebar = () => {
           onClick={() => setShowPriority((prev) => !prev)}
           className="flex w-full items-center justify-between px-8 py-3 text-gray-500"
         >
-          <span className="">Priority</span>
+          <span>Priority</span>
           {showPriority ? (
             <ChevronUp className="h-5 w-5" />
           ) : (
@@ -123,26 +125,16 @@ const Sidebar = () => {
         </button>
         {showPriority && (
           <>
-            <SidebarLink
-              icon={AlertCircle}
-              label="Urgent"
-              href="/priority/urgent"
-            />
-            <SidebarLink
-              icon={ShieldAlert}
-              label="High"
-              href="/priority/high"
-            />
-            <SidebarLink
-              icon={AlertTriangle}
-              label="Medium"
-              href="/priority/medium"
-            />
+            <SidebarLink icon={AlertCircle} label="Urgent" href="/priority/urgent" />
+            <SidebarLink icon={ShieldAlert} label="High" href="/priority/high" />
+            <SidebarLink icon={AlertTriangle} label="Medium" href="/priority/medium" />
             <SidebarLink icon={AlertOctagon} label="Low" href="/priority/low" />
             <SidebarLink icon={Layers3} label="Backlog" href="/priority/backlog" />
           </>
         )}
       </div>
+
+      {/* MOBILE USER FOOTER */}
       <div className="z-10 mt-auto flex w-full flex-col items-center gap-4 border-t border-border px-6 py-6 md:hidden">
         <div className="flex w-full items-center">
           <div className="relative h-10 w-10 flex-shrink-0">
@@ -196,7 +188,6 @@ const SidebarLink = ({ href, icon: Icon, label }: SidebarLinkProps) => {
         {isActive && (
           <div className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
         )}
-
         <Icon
           className={`h-5 w-5 transition-colors ${
             isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"

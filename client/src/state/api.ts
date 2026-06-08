@@ -109,10 +109,17 @@ export const api = createApi({
           return { error: error.message || "Could not fetch user data" };
         }
       },
+      providesTags: ["AuthUser"],
     }),
     getProjects: build.query<Project[], void>({
       query: () => "projects",
-      providesTags: ["Projects"],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((project) => ({ type: "Projects" as const, id: project._id || project.id })),
+              { type: "Projects", id: "LIST" },
+            ]
+          : [{ type: "Projects", id: "LIST" }],
     }),
     createProject: build.mutation<Project, Partial<Project>>({
       query: (project) => ({
@@ -120,21 +127,27 @@ export const api = createApi({
         method: "POST",
         body: project,
       }),
-      invalidatesTags: ["Projects"],
+      invalidatesTags: [{ type: "Projects", id: "LIST" }],
     }),
     getTasks: build.query<Task[], { projectId: string }>({
       query: ({ projectId }) => `tasks?projectId=${projectId}`,
       providesTags: (result) =>
         result
-          ? result.map((task) => ({ type: "Tasks" as const, id: task._id || task.id }))
-          : [{ type: "Tasks" as const }],
+          ? [
+              ...result.map((task) => ({ type: "Tasks" as const, id: task._id || task.id })),
+              { type: "Tasks", id: "LIST" },
+            ]
+          : [{ type: "Tasks", id: "LIST" }],
     }),
     getTasksByUser: build.query<Task[], string>({
       query: (userId) => `tasks/user/${userId}`,
       providesTags: (result, error, userId) =>
         result
-          ? result.map((task) => ({ type: "Tasks" as const, id: task._id || task.id }))
-          : [{ type: "Tasks", id: userId }],
+          ? [
+              ...result.map((task) => ({ type: "Tasks" as const, id: task._id || task.id })),
+              { type: "Tasks", id: `USER_${userId}` },
+            ]
+          : [{ type: "Tasks", id: `USER_${userId}` }],
     }),
     createTask: build.mutation<Task, Partial<Task>>({
       query: (task) => ({
@@ -142,7 +155,10 @@ export const api = createApi({
         method: "POST",
         body: task,
       }),
-      invalidatesTags: ["Tasks"],
+      invalidatesTags: (result, error, arg) => [
+        { type: "Tasks", id: "LIST" },
+        { type: "Tasks", id: `USER_${arg.authorUserId}` },
+      ],
     }),
     updateTaskStatus: build.mutation<Task, { taskId: string; status: string }>({
       query: ({ taskId, status }) => ({

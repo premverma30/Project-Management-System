@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  getTasks,
+  deleteTask,
   getUserTasks,
   updateTaskStatus,
   createTask,
@@ -11,7 +11,7 @@ const router = Router();
 
 router.get("/", protect, getTasks);
 router.post("/", protect, createTask);
-router.patch("/:taskId/status", protect, updateTaskStatus);
+router.delete("/:taskId", protect, deleteTask);
 router.get("/user/:userId", protect, getUserTasks);
 
 export default router;

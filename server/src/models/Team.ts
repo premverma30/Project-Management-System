@@ -4,6 +4,7 @@ export interface ITeam extends Document {
   teamName: string;
   productOwnerUserId?: mongoose.Types.ObjectId;
   projectManagerUserId?: mongoose.Types.ObjectId;
+  members: mongoose.Types.ObjectId[];
 }
 
 const TeamSchema: Schema = new Schema(
@@ -11,6 +12,7 @@ const TeamSchema: Schema = new Schema(
     teamName: { type: String, required: true },
     productOwnerUserId: { type: Schema.Types.ObjectId, ref: 'User' },
     projectManagerUserId: { type: Schema.Types.ObjectId, ref: 'User' },
+    members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
   { timestamps: true }
 );

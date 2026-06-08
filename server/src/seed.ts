@@ -9,9 +9,9 @@ import User from "./models/User.js";
 import Team from "./models/Team.js";
 import Project from "./models/Project.js";
 import Task from "./models/Task.js";
-import ProjectTeam from "./models/ProjectTeam.js";
-import TaskAssignment from "./models/TaskAssignment.js";
 import Attachment from "./models/Attachment.js";
+// import ProjectTeam from "./models/ProjectTeam.js";
+// import TaskAssignment from "./models/TaskAssignment.js";
 
 dotenv.config();
 
@@ -31,8 +31,8 @@ async function seed() {
       Team.deleteMany({}),
       Project.deleteMany({}),
       Task.deleteMany({}),
-      ProjectTeam.deleteMany({}),
-      TaskAssignment.deleteMany({}),
+      // ProjectTeam.deleteMany({}),
+      // TaskAssignment.deleteMany({}),
       Attachment.deleteMany({}),
     ]);
 
@@ -130,6 +130,7 @@ async function seed() {
         });
     }
 
+    /*
     // 6. Seed ProjectTeams
     console.log("Seeding ProjectTeams...");
     for (const pt of projectTeamsData) {
@@ -147,6 +148,7 @@ async function seed() {
             taskId: taskIdMap[ta.taskId]
         });
     }
+    */
 
     // 8. Seed Attachments
     console.log("Seeding Attachments...");

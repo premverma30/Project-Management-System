@@ -3,16 +3,29 @@ import { Grid3X3, List, Table, Clock, PlusSquare, Filter, Share2, Search } from 
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/Button";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 type Props = {
   activeTab: string;
   setActiveTab: (tabName: string) => void;
+  projectName: string;
 };
 
-const ProjectHeader = ({ activeTab, setActiveTab }: Props) => {
+const ProjectHeader = ({ activeTab, setActiveTab, projectName }: Props) => {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
     <div className="px-6 pb-6 pt-4">
       <div className="flex items-center justify-between pb-6">
-        <Header name="Product Design Development" />
+        <Header name={projectName} />
       </div>
 
       {/* TABS */}
@@ -57,6 +70,9 @@ const ProjectHeader = ({ activeTab, setActiveTab }: Props) => {
               type="text"
               placeholder="Search Task"
               className="h-9 w-[200px] rounded-full border border-border bg-muted/50 py-1 pl-9 pr-4 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary dark:bg-muted/20 text-foreground placeholder:text-muted-foreground"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
             />
           </div>
         </div>

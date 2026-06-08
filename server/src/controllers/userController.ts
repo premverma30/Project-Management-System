@@ -11,7 +11,7 @@ export const getUsers = asyncHandler(async (_req: Request, res: Response) => {
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   const { userId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId as string)) {
     throw new ApiError(400, "Invalid user ID");
   }
 
