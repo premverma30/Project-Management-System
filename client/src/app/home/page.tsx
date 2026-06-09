@@ -266,7 +266,7 @@ const HomePage = () => {
                     data={projectStatus}
                     labelLine={false}
                     outerRadius={100}
-                    label={({ name, percent }) =>
+                    label={({ name, percent = 0 }) =>
                       `${name} ${(percent * 100).toFixed(0)}%`
                     }
                   >
