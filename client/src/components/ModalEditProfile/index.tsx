@@ -105,7 +105,7 @@ export const ModalEditProfile: React.FC<ModalEditProfileProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Edit Profile">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-foreground">Edit Profile</h2>
