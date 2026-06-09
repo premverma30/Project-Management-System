@@ -35,7 +35,7 @@ const ProjectHeader = ({ activeTab, setActiveTab, project }: Props) => {
     }
   };
 
-  const isOwner = authUser && project?.ownerId === (authUser.id || (authUser as any)._id);
+  const isOwner = authUser && project?.ownerId === authUser._id;
   const projectName = project?.name || "Project";
 
   return (
