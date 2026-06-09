@@ -280,7 +280,12 @@ export default function LandingPage() {
                  >
                    <div className="absolute -top-4 -right-4 text-6xl font-black text-white/5">{item.step}</div>
                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20">
-                     {React.cloneElement(item.icon as React.ReactElement, { className: "h-8 w-8 text-white" })}
+                     {React.cloneElement(
+                        item.icon as React.ReactElement<{ className?: string }>,
+                        {
+                          className: "h-8 w-8 text-white",
+                        }
+                      )}
                    </div>
                    <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
                    <p className="text-gray-400">{item.desc}</p>
