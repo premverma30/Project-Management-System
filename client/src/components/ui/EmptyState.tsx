@@ -52,17 +52,12 @@
 
 
 
-
 import * as React from "react";
-import { motion } from "framer-motion";
+import { motion, HTMLMotionProps } from "framer-motion";
 import { FolderSearch, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-interface EmptyStateProps
-  extends Omit<
-    React.HTMLAttributes<HTMLDivElement>,
-    "onAnimationStart" | "onAnimationEnd" | "onAnimationIteration"
-  > {
+interface EmptyStateProps extends HTMLMotionProps<"div"> {
   icon?: LucideIcon;
   title: string;
   description?: string;
@@ -75,6 +70,7 @@ export function EmptyState({
   description,
   action,
   className,
+  children,
   ...props
 }: EmptyStateProps) {
   return (
@@ -102,6 +98,10 @@ export function EmptyState({
       )}
 
       {action && <div>{action}</div>}
+
+      {children}
     </motion.div>
   );
 }
+
+export default EmptyState;
