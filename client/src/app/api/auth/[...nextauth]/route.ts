@@ -27,6 +27,18 @@ const handler = NextAuth({
      * JWT and MongoDB _id on the user object so the jwt callback can pick them up.
      */
     async signIn({ user, account }) {
+      // Debug: log incoming OAuth account and user details to help diagnose intermittent AccessDenied
+      try {
+        console.log("[NextAuth] signIn invoked", {
+          provider: account?.provider,
+          providerAccountId: account?.providerAccountId,
+          email: user?.email,
+          name: user?.name,
+          NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+        });
+      } catch (e) {
+        console.error("[NextAuth] signIn log error", e);
+      }
       try {
         // Defensive: some providers or edge-cases may not populate account.providerAccountId.
         // Fall back to email local-part to avoid missing-field rejections from backend.
@@ -70,6 +82,11 @@ const handler = NextAuth({
      * On subsequent calls (session reads, refresh) `user` is undefined — we pass token through.
      */
     async jwt({ token, user }) {
+      try {
+        console.log("[NextAuth] jwt callback", { hasUser: !!user, tokenSnapshot: { ...token } });
+      } catch (e) {
+        console.error("[NextAuth] jwt log error", e);
+      }
       if (user) {
         token.backendToken = (user as any).backendToken;
         token.mongoId = (user as any).mongoId;
@@ -83,6 +100,11 @@ const handler = NextAuth({
      * Authorization header and the UI can identify the current user's MongoDB _id.
      */
     async session({ session, token }) {
+      try {
+        console.log("[NextAuth] session callback", { sessionUser: session.user?.email, hasBackendToken: !!(token as any).backendToken });
+      } catch (e) {
+        console.error("[NextAuth] session log error", e);
+      }
       (session as any).backendToken = token.backendToken;
       (session as any).mongoId = token.mongoId;
       return session;
