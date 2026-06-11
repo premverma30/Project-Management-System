@@ -6,26 +6,41 @@ import { asyncHandler, ApiError } from "../middleware/errorHandler.js";
 export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
   const { googleId, email, username, profilePictureUrl } = req.body;
 
+  // Log incoming payload for debugging (remove or reduce in production)
+  console.log("[AuthController] POST /auth/google payload:", {
+    googleId,
+    email,
+    username,
+    profilePictureUrl,
+  });
+
   if (!googleId || !email || !username) {
+    console.error(
+      "[AuthController] Missing required fields:",
+      { googleIdPresent: !!googleId, emailPresent: !!email, usernamePresent: !!username }
+    );
     throw new ApiError(400, "Missing required fields: googleId, email, username");
   }
 
   let user = await User.findOne({ googleId });
 
   if (!user) {
-    user = await User.create({
-      googleId,
-      email,
-      username,
-      profilePictureUrl,
-    });
+    try {
+      user = await User.create({
+        googleId,
+        email,
+        username,
+        profilePictureUrl,
+      });
+    } catch (err) {
+      console.error("[AuthController] Error creating user:", err);
+      throw new ApiError(500, "Failed to create user");
+    }
   }
 
-  const token = jwt.sign(
-    { id: user._id, email: user.email },
-    process.env.JWT_SECRET!,
-    { expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as any }
-  );
+  const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET!, {
+    expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as any,
+  });
 
   res.json({ token, user });
 });
