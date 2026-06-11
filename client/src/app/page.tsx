@@ -60,11 +60,11 @@ export default function LandingPage() {
             <Link href="#faq" className="hover:text-white transition-colors">FAQ</Link>
           </nav>
 
-          <div className="hidden md:flex items-center gap-4">
-            <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
+            <div className="hidden md:flex items-center gap-4">
+            <button onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/home` })} className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
               Log in
             </button>
-            <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black hover:bg-gray-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+            <button onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/home` })} className="rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black hover:bg-gray-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               Open Workspace
             </button>
           </div>
@@ -94,8 +94,8 @@ export default function LandingPage() {
               <Link href="#testimonials" onClick={() => setMobileMenuOpen(false)}>Testimonials</Link>
               <Link href="#faq" onClick={() => setMobileMenuOpen(false)}>FAQ</Link>
               <div className="h-px w-full bg-white/10 my-4" />
-              <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="w-full text-center py-3 rounded-lg border border-white/20">Log in</button>
-              <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="w-full text-center py-3 rounded-lg bg-white text-black font-bold">Open Workspace</button>
+              <button onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/home` })} className="w-full text-center py-3 rounded-lg border border-white/20">Log in</button>
+              <button onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/home` })} className="w-full text-center py-3 rounded-lg bg-white text-black font-bold">Open Workspace</button>
             </div>
           </motion.div>
         )}
@@ -143,7 +143,7 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
             >
-              <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-gray-100 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 flex items-center justify-center gap-2">
+              <button onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/home` })} className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:bg-gray-100 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 flex items-center justify-center gap-2">
                 Open Workspace <ArrowRight className="h-5 w-5" />
               </button>
               <button className="w-full sm:w-auto px-8 py-4 rounded-full glass font-medium text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2 group">
@@ -357,7 +357,7 @@ export default function LandingPage() {
               <h2 className="text-4xl md:text-6xl font-bold mb-6">Ready to align your team?</h2>
               <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">Create your secure enterprise workspace today and bring clarity to your organization's projects.</p>
               
-              <button onClick={() => signIn("google", { callbackUrl: "/home" })} className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:scale-105 transition-transform shadow-[0_0_40px_rgba(255,255,255,0.4)]">
+              <button onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/home` })} className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-black font-bold text-lg hover:scale-105 transition-transform shadow-[0_0_40px_rgba(255,255,255,0.4)]">
                 Open Workspace <ArrowRight className="h-5 w-5 text-blue-600" />
               </button>
             </div>

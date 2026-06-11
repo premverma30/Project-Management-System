@@ -38,7 +38,7 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="pb-8 pt-6">
             <Button
-              onClick={() => signIn("google", { callbackUrl: "/home" })}
+              onClick={() => signIn("google", { callbackUrl: `${window.location.origin}/home` })}
               variant="outline"
               size="lg"
               className="w-full flex items-center justify-center gap-3 h-12 text-foreground hover:bg-muted"
