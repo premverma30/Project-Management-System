@@ -28,22 +28,27 @@ const handler = NextAuth({
      */
     async signIn({ user, account }) {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/google`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              googleId: account?.providerAccountId,
-              email: user.email,
-              username: user.name?.replace(/\s+/g, "").toLowerCase(),
-              profilePictureUrl: user.image,
-            }),
-          }
-        );
+        // Defensive: some providers or edge-cases may not populate account.providerAccountId.
+        // Fall back to email local-part to avoid missing-field rejections from backend.
+        const googleId = account?.providerAccountId ?? user.email;
+        const username = user.name
+          ? user.name.replace(/\s+/g, "").toLowerCase()
+          : (user.email || "").split("@")[0];
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            googleId,
+            email: user.email,
+            username,
+            profilePictureUrl: user.image,
+          }),
+        });
 
         if (!res.ok) {
-          console.error("[NextAuth] Backend sync failed:", res.status, await res.text());
+          const text = await res.text();
+          console.error("[NextAuth] Backend sync failed:", res.status, text);
           return false;
         }
 
