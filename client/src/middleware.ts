@@ -48,18 +48,14 @@ export default withAuth(
   }
 );
 
+// export const config = {
+//   matcher: [
+//     "/((?!_next/static|_next/image|favicon\\.ico).*)",
+//   ],
+// };
+
 export const config = {
-  /*
-   * Match every path EXCEPT:
-   * - _next/static  (Next.js static assets)
-   * - _next/image   (Next.js image optimization)
-   * - favicon.ico   (browser tab icon)
-   * - api/auth      (NextAuth endpoints — already allowed in authorized callback above)
-   *
-   * Note: / and /login are excluded at the callback level, not here,
-   * so the middleware still runs on them (needed for the authorized check).
-   */
   matcher: [
-    "/((?!_next/static|_next/image|favicon\\.ico).*)",
+    "/((?!api/auth|_next/static|_next/image|favicon\\.ico).*)",
   ],
 };
