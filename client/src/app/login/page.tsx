@@ -33,7 +33,16 @@ export default function LoginPage() {
         <Card variant="glass" className="border-white/10 shadow-2xl backdrop-blur-xl">
           <CardHeader className="text-center pb-2 pt-8">
             <div className="mx-auto mb-6 flex items-center justify-center">
-              <img src="/logo.png" alt="NexTask" width={80} height={80} className="object-contain" />
+              <div className="rounded-2xl bg-white p-3 shadow-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/logo.png"
+                  alt="NexTask logo"
+                  width={56}
+                  height={56}
+                  style={{ display: "block", objectFit: "contain" }}
+                />
+              </div>
             </div>
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               NexTask
