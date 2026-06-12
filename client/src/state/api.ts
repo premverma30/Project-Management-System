@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { getSession } from "next-auth/react";
 
 export interface Project {
   _id?: string;
@@ -87,9 +86,10 @@ export interface Team {
 export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_URL,
-    prepareHeaders: async (headers) => {
-      const session = await getSession();
-      const token = (session as any)?.backendToken;
+    prepareHeaders: (headers, { getState }) => {
+      // Read the token from Redux state — zero network cost.
+      // SessionSync keeps this in sync with the NextAuth session.
+      const token = (getState() as any).global.backendToken;
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }
@@ -100,11 +100,11 @@ export const api = createApi({
   tagTypes: ["Projects", "Tasks", "Users", "Teams", "AuthUser"],
   endpoints: (build) => ({
     getAuthUser: build.query({
-      queryFn: async (_, _queryApi, _extraoptions, fetchWithBQ) => {
+      queryFn: async (_, { getState }, _extraoptions, fetchWithBQ) => {
         try {
-          const session = await getSession();
-          if (!session) throw new Error("No session found");
-          const mongoId = (session as any).mongoId;
+          // Read mongoId from Redux state — no network round-trip.
+          const mongoId = (getState() as any).global.mongoId;
+          if (!mongoId) throw new Error("No session found");
 
           const userDetailsResponse = await fetchWithBQ(`users/${mongoId}`);
           const userDetails = userDetailsResponse.data as User;

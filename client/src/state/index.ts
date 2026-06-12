@@ -3,11 +3,15 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 export interface initialStateTypes {
   isSidebarCollapsed: boolean;
   isDarkMode: boolean;
+  backendToken: string | null;
+  mongoId: string | null;
 }
 
 const initialState: initialStateTypes = {
   isSidebarCollapsed: false,
   isDarkMode: false,
+  backendToken: null,
+  mongoId: null,
 };
 
 export const globalSlice = createSlice({
@@ -20,8 +24,15 @@ export const globalSlice = createSlice({
     setIsDarkMode: (state, action: PayloadAction<boolean>) => {
       state.isDarkMode = action.payload;
     },
+    setSessionCredentials: (
+      state,
+      action: PayloadAction<{ backendToken: string | null; mongoId: string | null }>,
+    ) => {
+      state.backendToken = action.payload.backendToken;
+      state.mongoId = action.payload.mongoId;
+    },
   },
 });
 
-export const { setIsSidebarCollapsed, setIsDarkMode } = globalSlice.actions;
+export const { setIsSidebarCollapsed, setIsDarkMode, setSessionCredentials } = globalSlice.actions;
 export default globalSlice.reducer;

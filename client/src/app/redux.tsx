@@ -128,6 +128,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import {
   persistStore,
   persistReducer,
+  createTransform,
   FLUSH,
   REHYDRATE,
   PAUSE,
@@ -158,10 +159,25 @@ const storage =
     ? createNoopStorage()
     : createWebStorage("local");
 
+// Strip transient session credentials before persisting the global slice.
+// backendToken / mongoId are re-populated on every page load by SessionSync
+// from the NextAuth httpOnly cookie — they must NOT be written to localStorage.
+const stripSessionTransform = createTransform(
+  // inbound: runs before persisting
+  (inboundState: any) => {
+    const { backendToken, mongoId, ...rest } = inboundState;
+    return rest;
+  },
+  // outbound: runs when rehydrating — pass through as-is
+  (outboundState: any) => outboundState,
+  { whitelist: ["global"] },
+);
+
 const persistConfig = {
   key: "root",
   storage,
   whitelist: ["global"],
+  transforms: [stripSessionTransform],
 };
 
 const rootReducer = combineReducers({

@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
+import SessionSync from "@/components/SessionSync";
 import StoreProvider, { useAppSelector } from "./redux";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
@@ -31,30 +32,22 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     }
   }, [isDarkMode]);
 
-  // Landing page — no app shell (no sidebar, no navbar)
-  if (pathname === "/") {
-    return (
+  // Determine the page content based on route and session status.
+  let content: React.ReactNode;
+
+  if (pathname === "/" || pathname === "/login") {
+    // Landing / login page — no app shell (no sidebar, no navbar)
+    content = (
       <main className="min-h-screen w-full bg-background text-foreground">
         {children}
       </main>
     );
-  }
-
-  // Login page — no app shell
-  if (pathname === "/login") {
-    return (
-      <main className="min-h-screen w-full bg-background text-foreground">
-        {children}
-      </main>
-    );
-  }
-
-  // Session is being resolved on the client.
-  // This is normal on first load and during fast navigation.
-  // We show a spinner instead of redirecting — the middleware already
-  // blocked unauthenticated access server-side before we get here.
-  if (status === "loading") {
-    return (
+  } else if (status === "loading") {
+    // Session is being resolved on the client.
+    // This is normal on first load and during fast navigation.
+    // We show a spinner instead of redirecting — the middleware already
+    // blocked unauthenticated access server-side before we get here.
+    content = (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <div className="relative h-10 w-10">
@@ -66,21 +59,29 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </div>
     );
+  } else {
+    // Authenticated app shell
+    content = (
+      <div className="flex min-h-screen w-full bg-background text-foreground">
+        <Sidebar />
+        <main
+          className={`flex w-full flex-col transition-all duration-300 ${
+            isSidebarCollapsed ? "" : "md:pl-64"
+          }`}
+        >
+          <Navbar />
+          {children}
+        </main>
+      </div>
+    );
   }
 
-  // Authenticated app shell
   return (
-    <div className="flex min-h-screen w-full bg-background text-foreground">
-      <Sidebar />
-      <main
-        className={`flex w-full flex-col transition-all duration-300 ${
-          isSidebarCollapsed ? "" : "md:pl-64"
-        }`}
-      >
-        <Navbar />
-        {children}
-      </main>
-    </div>
+    <>
+      {/* Sync NextAuth session → Redux on every route so prepareHeaders can read the token. */}
+      <SessionSync />
+      {content}
+    </>
   );
 };
 
