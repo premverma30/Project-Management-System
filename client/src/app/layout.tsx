@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NexTask AI",
+  title: "NexTask",
   description: "Project Management System",
 };
 

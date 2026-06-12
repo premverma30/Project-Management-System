@@ -36,12 +36,12 @@ export default function LoginPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-blue-400 shadow-lg"
+              className="mx-auto mb-6 flex items-center justify-center"
             >
-              <Image src="/logo.png" alt="NexTask AI" width={40} height={40} className="object-contain" priority />
+              <Image src="/logo.png" alt="NexTask" width={80} height={80} className="object-contain" priority />
             </motion.div>
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-              NexTask AI
+              NexTask
             </CardTitle>
             <p className="mt-2 text-muted-foreground">
               Welcome back. Please sign in to continue.

@@ -52,7 +52,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.get("/", (_req, res) => {
-  res.json({ message: "NexTask AI API is running" });
+  res.json({ message: "NexTask API is running" });
 });
 
 app.use("/projects", projectRoutes);
