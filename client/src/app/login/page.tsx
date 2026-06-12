@@ -1,7 +1,6 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -25,6 +24,7 @@ export default function LoginPage() {
       <div className="absolute bottom-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/20 blur-[120px] pointer-events-none" />
 
       <motion.div
+        key="login-page-container"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -32,14 +32,9 @@ export default function LoginPage() {
       >
         <Card variant="glass" className="border-white/10 shadow-2xl backdrop-blur-xl">
           <CardHeader className="text-center pb-2 pt-8">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="mx-auto mb-6 flex items-center justify-center"
-            >
+            <div className="mx-auto mb-6 flex items-center justify-center">
               <img src="/logo.png" alt="NexTask" width={80} height={80} className="object-contain" />
-            </motion.div>
+            </div>
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               NexTask
             </CardTitle>
