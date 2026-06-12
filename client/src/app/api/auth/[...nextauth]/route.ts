@@ -3,56 +3,32 @@ import GoogleProvider from "next-auth/providers/google";
 
 const SEVEN_DAYS = 7 * 24 * 60 * 60; // 604800 seconds — matches backend JWT_EXPIRES_IN
 
-/**
- * Attempt a single backend sync call. Returns { token, user } on success,
- * or null on any failure (429, network error, non-ok status).
- * Does NOT throw — callers decide how to handle null.
- */
-async function tryBackendSync(payload: {
-  googleId: string;
-  email: string;
-  username: string;
-  profilePictureUrl?: string | null;
-}): Promise<{ token: string; user: { _id: string } } | null> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.warn("[NextAuth] Backend sync failed:", res.status, text);
-      return null;
-    }
-
-    return await res.json();
-  } catch (error) {
-    console.warn("[NextAuth] Backend sync network error:", error);
-    return null;
-  }
-}
-
-/**
- * Attempt backend sync with exponential backoff (up to 3 attempts).
- * Returns the sync result or null if all attempts fail.
- */
-async function syncWithRetry(payload: Parameters<typeof tryBackendSync>[0]) {
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3) {
+  let attempt = 0;
   let delay = 1000;
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    const result = await tryBackendSync(payload);
-    if (result) {
-      console.log(`[NextAuth] Backend sync succeeded on attempt ${attempt}`);
-      return result;
+  while (attempt < maxRetries) {
+    try {
+      const res = await fetch(url, options);
+      // Return if successful or if it's an error other than 429 Too Many Requests
+      if (res.ok || res.status !== 429) {
+        return res;
+      }
+      
+      const text = await res.text();
+      console.warn(`[NextAuth] Backend sync 429 on attempt ${attempt + 1}:`, text);
+      if (attempt === maxRetries - 1) {
+        throw new Error("Backend rate limited (429)");
+      }
+    } catch (error) {
+      if (attempt === maxRetries - 1) throw error;
+      console.warn(`[NextAuth] Backend sync fetch failed on attempt ${attempt + 1}:`, error);
     }
-    console.warn(`[NextAuth] Backend sync attempt ${attempt} failed`);
-    if (attempt < 3) {
-      await new Promise((r) => setTimeout(r, delay));
-      delay *= 2;
-    }
+    
+    await new Promise(resolve => setTimeout(resolve, delay));
+    delay *= 2; // exponential backoff
+    attempt++;
   }
-  return null;
+  throw new Error("Backend sync failed after retries");
 }
 
 const handler = NextAuth({
@@ -75,12 +51,11 @@ const handler = NextAuth({
   callbacks: {
     /**
      * signIn: called immediately after Google OAuth completes.
-     * We attempt to sync the Google user to our MongoDB backend.
-     * If the sync fails (e.g. 429 rate limit from Render), we STILL allow
-     * sign-in to proceed — the pending sync data is stored in the user object
-     * and the jwt callback will retry on subsequent session checks.
+     * We sync the Google user to our MongoDB backend and store the backend
+     * JWT and MongoDB _id on the user object so the jwt callback can pick them up.
      */
     async signIn({ user, account }) {
+      // Debug: log incoming OAuth account and user details to help diagnose intermittent AccessDenied
       try {
         console.log("[NextAuth] signIn invoked", {
           provider: account?.provider,
@@ -92,71 +67,58 @@ const handler = NextAuth({
       } catch (e) {
         console.error("[NextAuth] signIn log error", e);
       }
+      try {
+        // Defensive: some providers or edge-cases may not populate account.providerAccountId.
+        // Fall back to email local-part to avoid missing-field rejections from backend.
+        const googleId = account?.providerAccountId ?? user.email;
+        const username = user.name
+          ? user.name.replace(/\s+/g, "").toLowerCase()
+          : (user.email || "").split("@")[0];
 
-      // Defensive: some providers or edge-cases may not populate account.providerAccountId.
-      // Fall back to email local-part to avoid missing-field rejections from backend.
-      const googleId = account?.providerAccountId ?? user.email ?? "";
-      const username = user.name
-        ? user.name.replace(/\s+/g, "").toLowerCase()
-        : (user.email || "").split("@")[0];
+        const res = await fetchWithRetry(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            googleId,
+            email: user.email,
+            username,
+            profilePictureUrl: user.image,
+          }),
+        });
 
-      const syncPayload = {
-        googleId,
-        email: user.email || "",
-        username,
-        profilePictureUrl: user.image,
-      };
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("[NextAuth] Backend sync failed:", res.status, text);
+          throw new Error("BackendSyncFailed");
+        }
 
-      const data = await syncWithRetry(syncPayload);
-
-      if (data) {
-        // Backend sync succeeded — attach backend fields to user object.
+        const data = await res.json();
+        // Attach backend-specific fields to user object.
+        // These are picked up by the jwt callback below.
         (user as any).backendToken = data.token;
         (user as any).mongoId = data.user._id;
-      } else {
-        // Backend sync failed after retries — allow sign-in anyway.
-        // Store the sync payload so the jwt callback can retry later.
-        console.warn("[NextAuth] Backend sync failed after all retries. Allowing sign-in with pending sync.");
-        (user as any).pendingSyncPayload = syncPayload;
+        return true;
+      } catch (error) {
+        console.error("[NextAuth] signIn error syncing user to backend:", error);
+        throw error;
       }
-
-      // Always allow sign-in — never block the user due to backend issues.
-      return true;
     },
 
     /**
      * jwt: called whenever a JWT is created or updated.
      * On first sign-in `user` is populated — we transfer backend fields into the token.
-     * If backendToken is missing but pendingSyncPayload exists, we retry the sync
-     * on every session check until it succeeds (lazy retry).
+     * On subsequent calls (session reads, refresh) `user` is undefined — we pass token through.
      */
     async jwt({ token, user }) {
+      try {
+        console.log("[NextAuth] jwt callback", { hasUser: !!user, tokenSnapshot: { ...token } });
+      } catch (e) {
+        console.error("[NextAuth] jwt log error", e);
+      }
       if (user) {
-        // First sign-in: transfer fields from user object to token.
         token.backendToken = (user as any).backendToken;
         token.mongoId = (user as any).mongoId;
-        // Store pending sync payload if the initial sync failed.
-        if ((user as any).pendingSyncPayload) {
-          token.pendingSyncPayload = (user as any).pendingSyncPayload;
-        }
       }
-
-      // Lazy retry: if we have a pending sync (no backendToken yet), try again.
-      if (!token.backendToken && token.pendingSyncPayload) {
-        console.log("[NextAuth] jwt: attempting lazy backend sync retry...");
-        const data = await tryBackendSync(
-          token.pendingSyncPayload as Parameters<typeof tryBackendSync>[0]
-        );
-        if (data) {
-          console.log("[NextAuth] jwt: lazy sync succeeded!");
-          token.backendToken = data.token;
-          token.mongoId = data.user._id;
-          delete token.pendingSyncPayload; // Clear pending flag
-        } else {
-          console.warn("[NextAuth] jwt: lazy sync still failing, will retry on next session check.");
-        }
-      }
-
       return token;
     },
 
@@ -166,10 +128,13 @@ const handler = NextAuth({
      * Authorization header and the UI can identify the current user's MongoDB _id.
      */
     async session({ session, token }) {
+      try {
+        console.log("[NextAuth] session callback", { sessionUser: session.user?.email, hasBackendToken: !!(token as any).backendToken });
+      } catch (e) {
+        console.error("[NextAuth] session log error", e);
+      }
       (session as any).backendToken = token.backendToken;
       (session as any).mongoId = token.mongoId;
-      // Let the client know if backend sync is still pending
-      (session as any).syncPending = !token.backendToken && !!token.pendingSyncPayload;
       return session;
     },
   },
