@@ -9,6 +9,13 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3)
   while (attempt < maxRetries) {
     try {
       const res = await fetch(url, options);
+      
+      // LOG RESPONSE HEADERS to debug the 429 source
+      console.log(`[NextAuth] Backend response for ${url}:`, {
+        status: res.status,
+        headers: Object.fromEntries(res.headers.entries())
+      });
+
       // Return if successful or if it's an error other than 429 Too Many Requests
       if (res.ok || res.status !== 429) {
         return res;
