@@ -3,38 +3,54 @@ import GoogleProvider from "next-auth/providers/google";
 
 const SEVEN_DAYS = 7 * 24 * 60 * 60; // 604800 seconds — matches backend JWT_EXPIRES_IN
 
-async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3) {
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 5) {
   let attempt = 0;
-  let delay = 1000;
-  while (attempt < maxRetries) {
+  // Start with a 3s delay for Render cold starts
+  let delay = 3000; 
+  
+  while (attempt <= maxRetries) {
     try {
-      const res = await fetch(url, options);
+      // 15-second timeout per fetch to ensure it doesn't hang indefinitely
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
       
-      // LOG RESPONSE HEADERS to debug the 429 source
-      console.log(`[NextAuth] Backend response for ${url}:`, {
-        status: res.status,
-        headers: Object.fromEntries(res.headers.entries())
+      console.log(`[NextAuth] Fetching backend sync: ${url} (Attempt ${attempt + 1}/${maxRetries + 1})`);
+      
+      const res = await fetch(url, {
+        ...options,
+        signal: controller.signal as any,
       });
+      
+      clearTimeout(timeoutId);
 
-      // Return if successful or if it's an error other than 429 Too Many Requests
-      if (res.ok || res.status !== 429) {
+      // Return immediately if it's a success (2xx) or a client error (4xx other than 429)
+      // We don't want to retry 400 Bad Request or 401 Unauthorized
+      if (res.ok || (res.status >= 400 && res.status < 500 && res.status !== 429)) {
         return res;
       }
       
+      // If it's 429 or 5xx, we should retry
       const text = await res.text();
-      console.warn(`[NextAuth] Backend sync 429 on attempt ${attempt + 1}:`, text);
-      if (attempt === maxRetries - 1) {
-        throw new Error("Backend rate limited (429)");
+      console.warn(`[NextAuth] Backend returned ${res.status} on attempt ${attempt + 1}: ${text.substring(0, 100)}`);
+      
+      if (attempt === maxRetries) {
+        throw new Error(`Backend failed with status ${res.status}`);
       }
-    } catch (error) {
-      if (attempt === maxRetries - 1) throw error;
-      console.warn(`[NextAuth] Backend sync fetch failed on attempt ${attempt + 1}:`, error);
+    } catch (error: any) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      console.warn(`[NextAuth] Backend sync fetch failed on attempt ${attempt + 1}:`, error.message);
     }
     
+    console.log(`[NextAuth] Waiting ${delay}ms before next retry...`);
     await new Promise(resolve => setTimeout(resolve, delay));
-    delay *= 2; // exponential backoff
+    
+    // Exponential backoff capped at 30s
+    delay = Math.min(delay * 2, 30000);
     attempt++;
   }
+  
   throw new Error("Backend sync failed after retries");
 }
 

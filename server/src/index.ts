@@ -47,6 +47,10 @@ import userRoutes from "./routes/userRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: Date.now() });
+});
+
 app.get("/", (_req, res) => {
   res.json({ message: "NexTask AI API is running" });
 });
