@@ -38,7 +38,7 @@ export default function LoginPage() {
               transition={{ delay: 0.2, duration: 0.5 }}
               className="mx-auto mb-6 flex items-center justify-center"
             >
-              <Image src="/logo.png" alt="NexTask" width={80} height={80} className="object-contain" priority />
+              <img src="/logo.png" alt="NexTask" width={80} height={80} className="object-contain" />
             </motion.div>
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
               NexTask
