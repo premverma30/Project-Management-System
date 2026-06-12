@@ -3,6 +3,34 @@ import GoogleProvider from "next-auth/providers/google";
 
 const SEVEN_DAYS = 7 * 24 * 60 * 60; // 604800 seconds — matches backend JWT_EXPIRES_IN
 
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3) {
+  let attempt = 0;
+  let delay = 1000;
+  while (attempt < maxRetries) {
+    try {
+      const res = await fetch(url, options);
+      // Return if successful or if it's an error other than 429 Too Many Requests
+      if (res.ok || res.status !== 429) {
+        return res;
+      }
+      
+      const text = await res.text();
+      console.warn(`[NextAuth] Backend sync 429 on attempt ${attempt + 1}:`, text);
+      if (attempt === maxRetries - 1) {
+        throw new Error("Backend rate limited (429)");
+      }
+    } catch (error) {
+      if (attempt === maxRetries - 1) throw error;
+      console.warn(`[NextAuth] Backend sync fetch failed on attempt ${attempt + 1}:`, error);
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, delay));
+    delay *= 2; // exponential backoff
+    attempt++;
+  }
+  throw new Error("Backend sync failed after retries");
+}
+
 const handler = NextAuth({
   providers: [
     GoogleProvider({
@@ -47,7 +75,7 @@ const handler = NextAuth({
           ? user.name.replace(/\s+/g, "").toLowerCase()
           : (user.email || "").split("@")[0];
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+        const res = await fetchWithRetry(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -61,7 +89,7 @@ const handler = NextAuth({
         if (!res.ok) {
           const text = await res.text();
           console.error("[NextAuth] Backend sync failed:", res.status, text);
-          return false;
+          throw new Error("BackendSyncFailed");
         }
 
         const data = await res.json();
@@ -72,7 +100,7 @@ const handler = NextAuth({
         return true;
       } catch (error) {
         console.error("[NextAuth] signIn error syncing user to backend:", error);
-        return false;
+        throw error;
       }
     },
 
